@@ -3,7 +3,7 @@
 # File name: homstat.py
 # Created by: gemusia
 # Creation date: 22-06-2017
-# Last modified: 23-06-2017 16:05:18
+# Last modified: 24-06-2017 18:17:57
 # Purpose: module for computing statistics of 
 #   turbulent channel flow.
 #
@@ -24,6 +24,40 @@
 
 
 import numpy as np
+
+#~~~~~~~~~~ channel ~~~~~~~~~~
+#   - class for velocity field of wall bounded turbulent channel flow
+#
+# Directions of the flow:
+# x - streamwise 
+# y - wall-normal
+# z - spanwise
+#
+# Mesh size: K x N x M
+#
+# We assume that stremwise and spanwise directions have uniform mesh
+# and that wal-normal direction has nodes in zeroes of Chebyshev poynomials
+# y(j)=cos(j*pi/N)
+
+class Channel:
+
+    # for object initiation we need velocities in three directions (Ux,Uy,Uz)
+    # it should be given as three numpy arrays of size (K,N,M)
+    def __init__(self,Ux,Uy,Uz):
+        self.Ux = Ux
+        self.Uy = Uy
+        self.Uz = Uz
+
+    def displayU(self):
+        print "Ux = ",Ux
+        print "Uy = ",Uy
+        print "Uz = ",Uz
+
+
+
+
+
+
 
 #axis for computing means over homogeneity directions
 ha = (1,2)
