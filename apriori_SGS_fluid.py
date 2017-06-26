@@ -3,7 +3,7 @@
 # File name: apriori_SGS_fluid.py
 # Created by: mknorps 
 # Creation date: 21-06-2017
-# Last modified: 23-06-2017 16:08:31
+# Last modified: 23-06-2017 20:18:51
 # Purpose: take filtered and unfiltered fluid field 
 #          in Fourier space from spectral code 
 #          compute statistics of SGS fluid velocity
@@ -24,8 +24,9 @@ end    = 2532
 nFiles = end-start+1
 
 #Initialisation of variables
-upp = [[]]*(3*(end-start+1))
-uppf =[[]]*(3*(end-start+1))
+upp   = [[]]*(3*(end-start+1))
+uppf  = [[]]*(3*(end-start+1))
+sdict = {}
 
 #Constants
 n  = 128
@@ -55,8 +56,8 @@ for i in range(start,end):
         j=j+1
 
 for j in range(0,2):
-        upp_mean[j]  = upp_mean[j]/nFiles
-        uppf_mean[j] = uppf_mean[j]/nFiles
+        upp_mean[j]  = upp_mean[j]/float(nFiles)
+        uppf_mean[j] = uppf_mean[j]/float(nFiles)
 
 print upp_mean[2]
 print uppf_mean[2]

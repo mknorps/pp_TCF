@@ -3,7 +3,7 @@
 # File name: homstat.py
 # Created by: gemusia
 # Creation date: 22-06-2017
-# Last modified: 24-06-2017 18:17:57
+# Last modified: 25-06-2017 14:35:43
 # Purpose: module for computing statistics of 
 #   turbulent channel flow.
 #
@@ -43,10 +43,24 @@ class Channel:
 
     # for object initiation we need velocities in three directions (Ux,Uy,Uz)
     # it should be given as three numpy arrays of size (K,N,M)
-    def __init__(self,Ux,Uy,Uz):
-        self.Ux = Ux
-        self.Uy = Uy
-        self.Uz = Uz
+    def __init__(self,Ux,Uy,Uz,K,N,M):
+        wrongSize = []
+        UxShape = Ux.shape()
+        UyShape = Uy.shape()
+        UzShape = Uz.shape()
+        if UxShape <> (K,N,M):
+            wrongSize.append(("Ux has wrong shape: ",UxShape))
+        if UyShape <> (K,N,M):
+            wrongSize.append(("Uy has wrong shape: ",UyShape))
+        if UzShape <> (K,N,M):
+            wrongSize.append(("Uz has wrong shape: ",UzShape))
+
+        if  wrongSize <> []:
+            raise ValueError("Incorrect mesh size; ", wrongSize, "correct is: ( %d, %d, %d) ") % (K,N,M)
+        else: 
+            self.Ux = Ux
+            self.Uy = Uy
+            self.Uz = Uz
 
     def displayU(self):
         print "Ux = ",Ux
