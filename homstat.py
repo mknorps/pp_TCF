@@ -3,7 +3,7 @@
 # File name: homstat.py
 # Created by: gemusia
 # Creation date: 22-06-2017
-# Last modified: 25-06-2017 14:35:43
+# Last modified: 27-06-2017 17:47:41
 # Purpose: module for computing statistics of 
 #   turbulent channel flow.
 #
@@ -44,6 +44,7 @@ class Channel:
     # for object initiation we need velocities in three directions (Ux,Uy,Uz)
     # it should be given as three numpy arrays of size (K,N,M)
     def __init__(self,Ux,Uy,Uz,K,N,M):
+        #TODO - think if it can be coded simpler
         wrongSize = []
         UxShape = Ux.shape()
         UyShape = Uy.shape()
@@ -61,11 +62,40 @@ class Channel:
             self.Ux = Ux
             self.Uy = Uy
             self.Uz = Uz
+            self.shape = (K,N,M)
 
     def displayU(self):
         print "Ux = ",Ux
         print "Uy = ",Uy
         print "Uz = ",Uz
+
+    # seroes of Chebyshev polynomials
+
+    def ChebZeros(y,N):
+        return np.cos(y*np.pi/N)
+
+    # nodes are taken as zeroes of Chebyshev pomynomials
+    def ynodes(self):
+        return map(,range(self.shape[1]+1))
+
+    #mean
+    def hmean (self):
+        return (np.mean(self.Ux,axis=ha), np.mean(self.Uy,axis=ha), np.mean(self.Uz,axis=ha))
+
+
+    #standard deviation
+    def hstd (lst):
+        return np.std(lst,axis=ha)
+
+    #correlation of velocties
+    #E(U1*U2)-E(U1)*E(U2)
+    def hcor (lst1,lst2):
+        return hmean(lst1*lst2)-hmean(lst1)*hmean(lst2)
+
+
+    #kinetic energy
+    def hek (lstUx,lstUy,lstUz):
+        return np.var(lstUx,axis=ha) +  np.var(lstUy,axis=ha) +  np.var(lstUz,axis=ha) 
 
 
 
