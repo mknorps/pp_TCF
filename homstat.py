@@ -3,7 +3,7 @@
 # File name: homstat.py
 # Created by: gemusia
 # Creation date: 22-06-2017
-# Last modified: 27-06-2017 17:47:41
+# Last modified: 28-06-2017 18:46:52
 # Purpose: module for computing statistics of 
 #   turbulent channel flow.
 #
@@ -39,16 +39,20 @@ import numpy as np
 # and that wal-normal direction has nodes in zeroes of Chebyshev poynomials
 # y(j)=cos(j*pi/N)
 
+#class Channel(np.ndarray):
 class Channel:
 
+    # homogeneous directions axis
+    # note that input data  from files is in format (Uy,Uz,Ux)
+    ha=(1,2)
     # for object initiation we need velocities in three directions (Ux,Uy,Uz)
     # it should be given as three numpy arrays of size (K,N,M)
     def __init__(self,Ux,Uy,Uz,K,N,M):
         #TODO - think if it can be coded simpler
         wrongSize = []
-        UxShape = Ux.shape()
-        UyShape = Uy.shape()
-        UzShape = Uz.shape()
+        UxShape = np.array(Ux).shape
+        UyShape = np.array(Uy).shape
+        UzShape = np.array(Uz).shape
         if UxShape <> (K,N,M):
             wrongSize.append(("Ux has wrong shape: ",UxShape))
         if UyShape <> (K,N,M):
@@ -57,32 +61,33 @@ class Channel:
             wrongSize.append(("Uz has wrong shape: ",UzShape))
 
         if  wrongSize <> []:
-            raise ValueError("Incorrect mesh size; ", wrongSize, "correct is: ( %d, %d, %d) ") % (K,N,M)
+            raise ValueError("Incorrect mesh size; ", wrongSize, 'correct is: ( %d, %d, %d) ' % (K,N,M))
         else: 
-            self.Ux = Ux
-            self.Uy = Uy
-            self.Uz = Uz
+            self.Ux = np.array(Ux)
+            self.Uy = np.array(Uy)
+            self.Uz = np.array(Uz)
             self.shape = (K,N,M)
 
     def displayU(self):
-        print "Ux = ",Ux
-        print "Uy = ",Uy
-        print "Uz = ",Uz
+        print "Ux = ",self.Ux
+        print "Uy = ",self.Uy
+        print "Uz = ",self.Uz
 
-    # seroes of Chebyshev polynomials
-
-    def ChebZeros(y,N):
-        return np.cos(y*np.pi/N)
+    # zeroes of Chebyshev polynomials
+    def ChebZeros(N):
+        def ChebCurr(y):
+            return np.cos(y*np.pi/N)
+        return ChebCurr
 
     # nodes are taken as zeroes of Chebyshev pomynomials
     def ynodes(self):
-        return map(,range(self.shape[1]+1))
+        return map(ChebZeros(self.shape[1]),range(self.shape[1]+1))
 
     #mean
     def hmean (self):
-        return (np.mean(self.Ux,axis=ha), np.mean(self.Uy,axis=ha), np.mean(self.Uz,axis=ha))
+        return (self.ynodes,np.mean(self.Ux,axis=ha), np.mean(self.Uy,axis=ha), np.mean(self.Uz,axis=ha))
 
-
+'''
     #standard deviation
     def hstd (lst):
         return np.std(lst,axis=ha)
@@ -99,30 +104,5 @@ class Channel:
 
 
 
-
-
-
-
-#axis for computing means over homogeneity directions
-ha = (1,2)
-
-
-#mean
-def hmean (lst):
-    return np.mean(lst,axis=ha)
-
-#standard deviation
-def hstd (lst):
-    return np.std(lst,axis=ha)
-
-#correlation of velocties
-#E(U1*U2)-E(U1)*E(U2)
-def hcor (lst1,lst2):
-    return hmean(lst1*lst2)-hmean(lst1)*hmean(lst2)
-
-
-#kinetic energy
-def hek (lstUx,lstUy,lstUz):
-    return np.var(lstUx,axis=ha) +  np.var(lstUy,axis=ha) +  np.var(lstUz,axis=ha) 
-
+'''
 
