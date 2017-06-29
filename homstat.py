@@ -3,7 +3,7 @@
 # File name: homstat.py
 # Created by: gemusia
 # Creation date: 22-06-2017
-# Last modified: 28-06-2017 18:46:52
+# Last modified: 29-06-2017 15:34:54
 # Purpose: module for computing statistics of 
 #   turbulent channel flow.
 #
@@ -39,15 +39,36 @@ import numpy as np
 # and that wal-normal direction has nodes in zeroes of Chebyshev poynomials
 # y(j)=cos(j*pi/N)
 
+
+
+# zeroes of Chebyshev polynomials
+def ChebZeros(N):
+    def ChebCurr(y):
+        return np.cos(y*np.pi/N)
+    return ChebCurr
+
+
+#symmetrisation of 1D nparray
+#useful for presenting statistics in most readable format
+#input may be symmetric or asymmetric function
+def symm(mode,lst):
+    opt = {"symm":1.0,"asymm":-1.0}
+    ll = len(lst)
+
+    return 0.5*(opt[mode] * lst[:ll/2+1] + np.flipud(lst)[:ll/2+1])
+
+
 #class Channel(np.ndarray):
 class Channel:
 
     # homogeneous directions axis
     # note that input data  from files is in format (Uy,Uz,Ux)
-    ha=(1,2)
+    ha=(0,2)
+
     # for object initiation we need velocities in three directions (Ux,Uy,Uz)
     # it should be given as three numpy arrays of size (K,N,M)
-    def __init__(self,Ux,Uy,Uz,K,N,M):
+    def __init__(self,Ux,Uy,Uz,K,N,M,Retau=150):
+
         #TODO - think if it can be coded simpler
         wrongSize = []
         UxShape = np.array(Ux).shape
@@ -63,46 +84,95 @@ class Channel:
         if  wrongSize <> []:
             raise ValueError("Incorrect mesh size; ", wrongSize, 'correct is: ( %d, %d, %d) ' % (K,N,M))
         else: 
-            self.Ux = np.array(Ux)
-            self.Uy = np.array(Uy)
-            self.Uz = np.array(Uz)
-            self.shape = (K,N,M)
+            self.Ux    = np.array(Ux)
+            self.Uy    = np.array(Uy)
+            self.Uz    = np.array(Uz)
+            self.K     = K
+            self.N     = N
+            self.M     = M
+            self.Retau = Retau
 
     def displayU(self):
         print "Ux = ",self.Ux
         print "Uy = ",self.Uy
         print "Uz = ",self.Uz
 
-    # zeroes of Chebyshev polynomials
-    def ChebZeros(N):
-        def ChebCurr(y):
-            return np.cos(y*np.pi/N)
-        return ChebCurr
-
     # nodes are taken as zeroes of Chebyshev pomynomials
     def ynodes(self):
-        return map(ChebZeros(self.shape[1]),range(self.shape[1]+1))
+        return np.array(map(ChebZeros(self.N-1),range(self.N)))
+
+
+    # cell centers in y direction, non-dimensionalized
+    def y_nondim(self):
+        y = self.ynodes()[0:self.N/2+1]
+        y_mid = 0.5*(y[:self.N/2]+y[1:])
+        return np.array(map(lambda x: (1.0-x)*self.Retau,y_mid))
+
+
+#...............................................................
+#      STATISTICS
+#...............................................................
 
     #mean
     def hmean (self):
-        return (self.ynodes,np.mean(self.Ux,axis=ha), np.mean(self.Uy,axis=ha), np.mean(self.Uz,axis=ha))
+        return (self.ynodes(),
+                np.mean(self.Ux,axis=self.ha), 
+                np.mean(self.Uy,axis=self.ha), 
+                np.mean(self.Uz,axis=self.ha))
 
-'''
+    #mean symmetrised
+    def hmean_symm (self):
+        return (self.y_nondim(),
+                symm("symm",np.mean(self.Ux,axis=self.ha)), 
+                symm("asymm",np.mean(self.Uy,axis=self.ha)), 
+                symm("symm",np.mean(self.Uz,axis=self.ha)))
+
     #standard deviation
-    def hstd (lst):
-        return np.std(lst,axis=ha)
+    def hstd (self):
+        return (self.ynodes(),
+                np.std(self.Ux,axis=self.ha), 
+                np.std(self.Uy,axis=self.ha), 
+                np.std(self.Uz,axis=self.ha))
 
+    #standard deviation symmetrised
+    def hstd_symm (self):
+        return (self.y_nondim(),
+                symm("symm",np.std(self.Ux,axis=self.ha)), 
+                symm("symm",np.std(self.Uy,axis=self.ha)), 
+                symm("symm",np.std(self.Uz,axis=self.ha)))
+
+        
     #correlation of velocties
     #E(U1*U2)-E(U1)*E(U2)
-    def hcor (lst1,lst2):
-        return hmean(lst1*lst2)-hmean(lst1)*hmean(lst2)
+    def hcor (self,vel1,vel2):
+        A1 = self.vel1
+        A2 = self.vel2
+        return (self.ynodes(),
+                np.mean(A1*A2,axis=self.ha)
+                -np.mean(A1,axis=self.ha)*np.mean(A2,axis=self.ha))
 
+
+    #correlation of velocties symmetrised
+    #E(U1*U2)-E(U1)*E(U2)
+    def hcor_symm (self,vel1,vel2):
+        A1 = self.vel1
+        A2 = self.vel2
+        symm_dict = {"Ux":1.0,"Uy":-1.0,"Uz":1.0}
+        symm_kind = symm_dict[vel1]*symm_dict[vel2]
+        return (self.y_nondim(),
+                symm(symm_kind, np.mean(A1*A2,axis=self.ha)
+                -np.mean(A1,axis=self.ha)*np.mean(A2,axis=self.ha)))
 
     #kinetic energy
-    def hek (lstUx,lstUy,lstUz):
-        return np.var(lstUx,axis=ha) +  np.var(lstUy,axis=ha) +  np.var(lstUz,axis=ha) 
+    def hek (self):
+        return  (self.ynodes(),
+                np.var(self.Ux,axis=ha) +  np.var(self.Uy,axis=ha) +  np.var(self.Uz,axis=ha) )
 
 
+    #kinetic energy symmetrised
+    def hek_symm (self):
+        return  (self.y_nondim(),
+                symm("symm",np.var(self.Ux,axis=ha) +  np.var(self.Uy,axis=ha) +  np.var(self.Uz,axis=ha))) 
 
-'''
+
 
