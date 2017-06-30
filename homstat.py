@@ -3,7 +3,7 @@
 # File name: homstat.py
 # Created by: gemusia
 # Creation date: 22-06-2017
-# Last modified: 29-06-2017 15:34:54
+# Last modified: 30-06-2017 19:00:33
 # Purpose: module for computing statistics of 
 #   turbulent channel flow.
 #
@@ -55,7 +55,7 @@ def symm(mode,lst):
     opt = {"symm":1.0,"asymm":-1.0}
     ll = len(lst)
 
-    return 0.5*(opt[mode] * lst[:ll/2+1] + np.flipud(lst)[:ll/2+1])
+    return 0.5*(opt[mode] * lst[:(ll+1)/2] + np.flipud(lst)[:(ll+1)/2])
 
 
 #class Channel(np.ndarray):
@@ -101,13 +101,17 @@ class Channel:
     def ynodes(self):
         return np.array(map(ChebZeros(self.N-1),range(self.N)))
 
+    # symmetrised nodes in nondimensional notation
+    # if N is even, we have N/2 nodes
+    # if N is odd, we have N/2+1 nodes
+    def y_nondim(self):
+        y = self.ynodes()[:(self.N+1)/2]
+        return np.array(map(lambda x: (1.0-x)*self.Retau,y))
 
     # cell centers in y direction, non-dimensionalized
-    def y_nondim(self):
-        y = self.ynodes()[0:self.N/2+1]
-        y_mid = 0.5*(y[:self.N/2]+y[1:])
-        return np.array(map(lambda x: (1.0-x)*self.Retau,y_mid))
-
+    def y_centers(self):
+        y = self.y_nondim()
+        return 0.5*(y[:len(y)-1]+y[1:])
 
 #...............................................................
 #      STATISTICS
@@ -145,8 +149,8 @@ class Channel:
     #correlation of velocties
     #E(U1*U2)-E(U1)*E(U2)
     def hcor (self,vel1,vel2):
-        A1 = self.vel1
-        A2 = self.vel2
+        A1 = getattr(self,vel1)
+        A2 = getattr(self,vel2)
         return (self.ynodes(),
                 np.mean(A1*A2,axis=self.ha)
                 -np.mean(A1,axis=self.ha)*np.mean(A2,axis=self.ha))
@@ -155,12 +159,17 @@ class Channel:
     #correlation of velocties symmetrised
     #E(U1*U2)-E(U1)*E(U2)
     def hcor_symm (self,vel1,vel2):
-        A1 = self.vel1
-        A2 = self.vel2
+        A1 = getattr(self,vel1)
+        A2 = getattr(self,vel2)
         symm_dict = {"Ux":1.0,"Uy":-1.0,"Uz":1.0}
-        symm_kind = symm_dict[vel1]*symm_dict[vel2]
+        def symm_kind(a,b):
+            if a*b==1:
+                return "symm"
+            else:
+                return "asymm"
+
         return (self.y_nondim(),
-                symm(symm_kind, np.mean(A1*A2,axis=self.ha)
+                symm(symm_kind(symm_dict[vel1],symm_dict[vel2]), np.mean(A1*A2,axis=self.ha)
                 -np.mean(A1,axis=self.ha)*np.mean(A2,axis=self.ha)))
 
     #kinetic energy

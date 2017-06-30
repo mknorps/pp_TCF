@@ -3,7 +3,7 @@
 # File name: homstat_tests.py
 # Created by: gemusia
 # Creation date: 23-06-2017
-# Last modified: 29-06-2017 15:37:49
+# Last modified: 30-06-2017 19:26:52
 # Purpose: test of module homstat.py
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -20,6 +20,9 @@ import unittest
 zeros128 = np.zeros(shape=(128,128,128))
 test_128 = hs.Channel(zeros128,zeros128,zeros128,128,128,128)
 
+zeros129 = np.zeros(shape=(128,129,128))
+test_129 = hs.Channel(zeros129,zeros129,zeros129,128,129,128)
+
 ones128 = np.ones(shape=(128,128,128))
 test_128ones = hs.Channel(ones128,ones128,ones128,128,128,128)
 
@@ -31,13 +34,50 @@ test_64_32 = hs.Channel(zeros64_32,zeros64_32,zeros64_32,32,32,64)
 ones_32 = np.ones(shape=(32,32,64))
 test_32ones = hs.Channel(ones_32,ones_32,ones_32,32,32,64)
 
-#nodes of Chebyshev
-y_NP64 = np.loadtxt("y_nodes.txt")
+# input examples for standard deviation and correlation testing
+tst = [[[1,0,0,1],[1,0,0,1],[1,0,0,1]],[[1,0,0,1],[1,0,0,1],[1,0,0,1]]]
+tst1 = [[[0,1,1,0],[0,1,1,0],[0,1,1,0]],[[0,1,1,0],[0,1,1,0],[0,1,1,0]]]
+
+tst_std = hs.Channel(tst,tst,tst,2,3,4)
+tst_cor = hs.Channel(tst,tst,tst,2,3,4)
+tst1_cor = hs.Channel(tst1,tst,tst,2,3,4)
+
+U_dict = {0:"Ux",1:"Uy",2:"Uz"}
 
 
 
 #******************************************
-#input tests
+# real data input; 
+#******************************************
+
+# WARNING - data from fortran file was written in different coordinates
+# so we have to take Ux as Uy, Uy as Uz and Uz as Ux (permutation! )
+fName  = "upp_"     #DNS
+fNamef = "uppf_"    #LES (a priori DNS)
+upp   = [[]]*3
+uppf  = [[]]*3
+
+for s in U_dict.keys():
+    with open(fName + U_dict[s] + "_2505",'r') as fupp:
+            # input data is in a matrix, and we first have to reshape 
+            # it to be a 3D field
+            # then directions must be permuted (np.transpose)
+	    upp[np.mod(s+1,3)]=np.transpose(np.loadtxt(fupp).reshape(129,128,128),axes=(2,0,1))
+    with open(fNamef + U_dict[s] + "_2505",'r') as fuppf:
+	    uppf[np.mod(s+1,3)]=np.transpose(np.loadtxt(fuppf).reshape(33,64,32),axes=(2,0,1))
+
+#initialize Channel objects
+U_DNS  = hs.Channel(upp[0],upp[1],upp[2],128,129,128) 
+U_LES = hs.Channel(uppf[0],uppf[1],uppf[2],32,33,64)
+
+Data_dict = {0:U_DNS,1:U_LES}
+
+#nodes of Chebyshev
+y_NP64 = np.loadtxt("y_nodes.txt")
+
+
+#******************************************
+#  __init__  tests
 #******************************************
 class ChannelTest(unittest.TestCase):
 
@@ -77,9 +117,11 @@ class ChannelTest(unittest.TestCase):
 #wall normal direction node computation tests
 class ChannelTest_nondim(unittest.TestCase):
 
-    def test_ynondim(self):
-        self.assertTrue(np.allclose(test_128.y_nondim(),y_NP64))
+    def test_ycenters(self):
+        self.assertTrue(np.allclose(test_129.y_centers(),y_NP64))
 
+    def test_ynondim1(self):
+        self.assertTrue(np.allclose(tst_std.y_nondim(),np.array([0,150])))
 
 
 
@@ -106,30 +148,33 @@ class ChannelTest_mean(unittest.TestCase):
     def test_mean_symm0(self):
         thmean = test_128.hmean_symm()
         for i in {1,2,3}:
-            self.assertTrue(np.allclose(thmean[i],np.zeros(65)))
+            self.assertTrue(np.allclose(thmean[i],np.zeros(64)))
 
 
     def test_mean_symm1(self):
         thmean = test_64_32.hmean_symm()
         for i in {1,2,3}:
-            self.assertTrue(np.allclose(thmean[i],np.zeros(17)))
+            self.assertTrue(np.allclose(thmean[i],np.zeros(16)))
 
     def test_mean_symm2(self):
         thmean = test_128ones.hmean_symm()
-        self.assertTrue(np.allclose(thmean[2],np.zeros(65)))
+        self.assertTrue(np.allclose(thmean[2],np.zeros(64)))
         for i in {1,3}:
-            self.assertTrue(np.allclose(thmean[i],np.ones(65)))
+            self.assertTrue(np.allclose(thmean[i],np.ones(64)))
 
 
     def test_mean_symm3(self):
         thmean = test_32ones.hmean_symm()
-        self.assertTrue(np.allclose(thmean[2],np.zeros(17)))
+        self.assertTrue(np.allclose(thmean[2],np.zeros(16)))
         for i in {1,3}:
-            self.assertTrue(np.allclose(thmean[i],np.ones(17)))
+            self.assertTrue(np.allclose(thmean[i],np.ones(16)))
+
+
 
 
 #std - standard deviation
 class ChannelTest_std(unittest.TestCase):
+
 
     def test_std0(self):
         thstd = test_128.hstd()
@@ -142,40 +187,138 @@ class ChannelTest_std(unittest.TestCase):
             self.assertTrue(np.allclose(thstd[i],np.zeros(32)))
 
     def test_std2(self):
-        tst = [[[1,0,0],[1,0,0],[1,0,0]],[[1,0,0],[1,0,0],[1,0,0]],[[1,0,0],[1,0,0],[1,0,0]]]
-        tst_channel = hs.Channel(tst,tst,tst,3,3,3)
-        thstd = tst_channel.hstd()
-        print thstd
+        thstd = tst_std.hstd()
         for i in {1,2,3}:
-            self.assertTrue(np.allclose(thstd[i],np.zeros(3)))
+            self.assertTrue(np.allclose(thstd[i],np.full(3,0.5)))
 
-    def test_std3(self):
-        thstd = test_64_32.hstd()
-        for i in {1,2,3}:
-            self.assertTrue(np.allclose(thstd[i],np.zeros(32)))
 
     def test_std_symm0(self):
         thstd = test_128.hstd_symm()
         for i in {1,2,3}:
-            self.assertTrue(np.allclose(thstd[i],np.zeros(65)))
-
+            self.assertTrue(np.allclose(thstd[i],np.zeros(64)))
 
     def test_std_symm1(self):
         thstd = test_64_32.hstd_symm()
         for i in {1,2,3}:
-            self.assertTrue(np.allclose(thstd[i],np.zeros(17)))
+            self.assertTrue(np.allclose(thstd[i],np.zeros(16)))
 
     def test_std_symm2(self):
         thstd = test_128ones.hstd_symm()
         for i in {1,2,3}:
-            self.assertTrue(np.allclose(thstd[i],np.zeros(65)))
+            self.assertTrue(np.allclose(thstd[i],np.zeros(64)))
 
 
     def test_std_symm3(self):
         thstd = test_32ones.hstd_symm()
         for i in {1,2,3}:
-            self.assertTrue(np.allclose(thstd[i],np.zeros(17)))
+            self.assertTrue(np.allclose(thstd[i],np.zeros(16)))
 
+
+    def test_std_symm4(self):
+        thstd = tst_std.hstd_symm()
+        for i in {1,2,3}:
+            self.assertTrue(np.allclose(thstd[i],np.full(2,0.5)))
+
+
+
+
+
+#cor - standard deviation
+class ChannelTest_cor(unittest.TestCase):
+
+
+    def test_cor0(self):
+        for i in range(3):
+            for j in range(3):
+                thcor = test_128.hcor(U_dict[i],U_dict[j])
+                self.assertTrue(np.allclose(thcor[1],np.zeros(128)))
+
+    def test_cor1(self):
+        for i in range(3):
+            thstd = tst_cor.hstd()
+            for j in range(3):
+                thcor = tst_cor.hcor(U_dict[i],U_dict[j])
+                if i<>j:
+                    cor_coeff= np.divide(thcor[1],thstd[i+1]*thstd[j+1])
+                    self.assertTrue(np.allclose(cor_coeff,np.ones(3)),"i = %d, j = %d" %(i,j))
+                else:
+                    self.assertTrue(np.allclose(thcor[1],map(lambda x: x**2,thstd[i+1])))
+
+    def test_cor2(self):
+        for i in range(3):
+            thstd = tst1_cor.hstd()
+            for j in range(3):
+                thcor = tst1_cor.hcor(U_dict[i],U_dict[j])
+                cor_coeff= np.divide(thcor[1],thstd[i+1]*thstd[j+1])
+                if (i,j) in {(0,1),(1,0),(0,2),(2,0)}:
+                    self.assertTrue(np.allclose(cor_coeff,np.full(3,-1.0)),"i = %d, j = %d" %(i,j))
+                elif (i,j) in {(1,2),(2,1)}:
+                    self.assertTrue(np.allclose(cor_coeff,np.full(3,1.0)),"i = %d, j = %d" %(i,j))
+                else:
+                    self.assertTrue(np.allclose(thcor[1],map(lambda x: x**2,thstd[i+1])))
+
+
+
+    def test_cor_symm0(self):
+        for i in range(3):
+            for j in range(3):
+                thcor = test_128.hcor_symm(U_dict[i],U_dict[j])
+                self.assertTrue(np.allclose(thcor[1],np.zeros(64)))
+
+    def test_cor_symm1(self):
+        for i in range(3):
+            thstd = tst_cor.hstd_symm()
+            for j in range(3):
+                thcor = tst_cor.hcor_symm(U_dict[i],U_dict[j])
+                if (i,j) in {(0,1),(1,0),(1,2),(2,1)}:
+                    self.assertTrue(np.allclose(thcor[1],np.zeros(2)),"i = %d, j = %d" %(i,j))
+                elif (i,j) in {(0,2),(2,0)}:
+                    cor_coeff= np.divide(thcor[1],thstd[i+1]*thstd[j+1])
+                    self.assertTrue(np.allclose(cor_coeff,np.ones(2)),"i = %d, j = %d" %(i,j))
+                else:
+                    self.assertTrue(np.allclose(thcor[1],map(lambda x: x**2,thstd[i+1])))
+
+    def test_cor_symm2(self):
+        for i in range(3):
+            thstd = tst1_cor.hstd_symm()
+            for j in range(3):
+                thcor = tst1_cor.hcor_symm(U_dict[i],U_dict[j])
+                cor_coeff= np.divide(thcor[1],thstd[i+1]*thstd[j+1])
+                if (i,j) in {(0,2),(2,0)}:
+                    self.assertTrue(np.allclose(cor_coeff,np.full(2,-1.0)),"i = %d, j = %d" %(i,j))
+                elif (i,j) in {(0,1),(1,0),(1,2),(2,1)}:
+                    self.assertTrue(np.allclose(cor_coeff,np.zeros(2)),"i = %d, j = %d" %(i,j))
+                else:
+                    self.assertTrue(np.allclose(thcor[1],map(lambda x: x**2,thstd[i+1])))
+
+    #test of cerreation coefficient computation on real data
+    # correlation (i,i) is compared to square of standard deviation
+    def test_cor_data(self):
+	for k in Data_dict.keys():
+	    for i in range(3):
+		thstd = Data_dict[k].hstd()
+		thcor = Data_dict[k].hcor(U_dict[i],U_dict[i])
+		self.assertTrue(np.allclose(thcor[1],map(lambda x: x**2,thstd[i+1])))
+
+
+    def test_cor_data_symm(self):
+	for k in Data_dict.keys():
+	    for i in range(3):
+		thstd = Data_dict[k].hstd_symm()
+		thcor = Data_dict[k].hcor_symm(U_dict[i],U_dict[i])
+		self.assertTrue(np.allclose(thcor[1],map(lambda x: x**2,thstd[i+1]),atol=1e-04))
+
+    #symmetrisation of cross-correlations is roughly tested
+    def test_cor_data_symm(self):
+	for k in Data_dict.keys():
+	    for i in range(3):
+                for j in range(3):
+		    thcor = Data_dict[k].hcor(U_dict[i],U_dict[j])
+		    thcor_symm = Data_dict[k].hcor_symm(U_dict[i],U_dict[j])
+		    self.assertTrue(np.allclose(thcor[1][len(thcor_symm[1])-1:],np.flipud(thcor_symm[1]),atol=0.01))
+
+
+#TODO - write tests for kinetic energy
 
 #******************************************
 #tests for functions in module homstat
@@ -206,10 +349,10 @@ class HomstatTest_functions(unittest.TestCase):
         self.assertTrue(np.allclose(hs.symm("asymm",np.ones(33)),np.zeros(17)))
 
     def test_symm2(self):
-        self.assertTrue(np.allclose(hs.symm("symm",np.full(14,3.14)),np.full(8,3.14)))
+        self.assertTrue(np.allclose(hs.symm("symm",np.full(14,3.14)),np.full(7,3.14)))
 
     def test_symm3(self):
-        self.assertTrue(np.allclose(hs.symm("asymm",np.full(32,3.1415)),np.zeros(17)))
+        self.assertTrue(np.allclose(hs.symm("asymm",np.full(32,3.1415)),np.zeros(16)))
 
 
 
