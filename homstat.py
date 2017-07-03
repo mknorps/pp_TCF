@@ -3,7 +3,7 @@
 # File name: homstat.py
 # Created by: gemusia
 # Creation date: 22-06-2017
-# Last modified: 30-06-2017 19:00:33
+# Last modified: 03-07-2017 16:18:33
 # Purpose: module for computing statistics of 
 #   turbulent channel flow.
 #
@@ -67,7 +67,7 @@ class Channel:
 
     # for object initiation we need velocities in three directions (Ux,Uy,Uz)
     # it should be given as three numpy arrays of size (K,N,M)
-    def __init__(self,Ux,Uy,Uz,K,N,M,Retau=150):
+    def __init__(self,Ux,Uy,Uz,K,N,M,Retau=150,nuinv=3500):
 
         #TODO - think if it can be coded simpler
         wrongSize = []
@@ -91,6 +91,7 @@ class Channel:
             self.N     = N
             self.M     = M
             self.Retau = Retau
+            self.nuinv = Retau
 
     def displayU(self):
         print "Ux = ",self.Ux
@@ -113,10 +114,16 @@ class Channel:
         y = self.y_nondim()
         return 0.5*(y[:len(y)-1]+y[1:])
 
+    #friction velocity used for non-dimensionalisation
+    # here giben as parameter
+    # TODO - compute it from the data
+    def utau(self):
+        return float(self.Retau)/(self.nuinv)
 #...............................................................
 #      STATISTICS
 #...............................................................
 
+# Symmetrised statistics ar presented in non-dimensional form
     #mean
     def hmean (self):
         return (self.ynodes(),
@@ -127,9 +134,9 @@ class Channel:
     #mean symmetrised
     def hmean_symm (self):
         return (self.y_nondim(),
-                symm("symm",np.mean(self.Ux,axis=self.ha)), 
-                symm("asymm",np.mean(self.Uy,axis=self.ha)), 
-                symm("symm",np.mean(self.Uz,axis=self.ha)))
+                symm("symm",np.mean(self.Ux,axis=self.ha)/self.utau()), 
+                symm("asymm",np.mean(self.Uy,axis=self.ha)/self.utau()), 
+                symm("symm",np.mean(self.Uz,axis=self.ha)/self.utau()))
 
     #standard deviation
     def hstd (self):
@@ -141,9 +148,9 @@ class Channel:
     #standard deviation symmetrised
     def hstd_symm (self):
         return (self.y_nondim(),
-                symm("symm",np.std(self.Ux,axis=self.ha)), 
-                symm("symm",np.std(self.Uy,axis=self.ha)), 
-                symm("symm",np.std(self.Uz,axis=self.ha)))
+                symm("symm",np.std(self.Ux,axis=self.ha)/self.utau()), 
+                symm("symm",np.std(self.Uy,axis=self.ha)/self.utau()), 
+                symm("symm",np.std(self.Uz,axis=self.ha)/self.utau()))
 
         
     #correlation of velocties
@@ -170,18 +177,18 @@ class Channel:
 
         return (self.y_nondim(),
                 symm(symm_kind(symm_dict[vel1],symm_dict[vel2]), np.mean(A1*A2,axis=self.ha)
-                -np.mean(A1,axis=self.ha)*np.mean(A2,axis=self.ha)))
+                -np.mean(A1,axis=self.ha)*np.mean(A2,axis=self.ha))/(self.utau()**2))
 
     #kinetic energy
     def hek (self):
         return  (self.ynodes(),
-                np.var(self.Ux,axis=ha) +  np.var(self.Uy,axis=ha) +  np.var(self.Uz,axis=ha) )
+                np.var(self.Ux,axis=ha) +  np.var(self.Uy,axis=ha) +  np.var(self.Uz,axis=ha))
 
 
     #kinetic energy symmetrised
     def hek_symm (self):
         return  (self.y_nondim(),
-                symm("symm",np.var(self.Ux,axis=ha) +  np.var(self.Uy,axis=ha) +  np.var(self.Uz,axis=ha))) 
+                symm("symm",np.var(self.Ux,axis=ha) +  np.var(self.Uy,axis=ha) +  np.var(self.Uz,axis=ha))/(self.utau()**2)) 
 
 
 

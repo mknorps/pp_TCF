@@ -3,7 +3,7 @@
 # File name: homstat_tests.py
 # Created by: gemusia
 # Creation date: 23-06-2017
-# Last modified: 30-06-2017 19:26:52
+# Last modified: 03-07-2017 16:23:09
 # Purpose: test of module homstat.py
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -159,15 +159,17 @@ class ChannelTest_mean(unittest.TestCase):
     def test_mean_symm2(self):
         thmean = test_128ones.hmean_symm()
         self.assertTrue(np.allclose(thmean[2],np.zeros(64)))
+        und = test_128ones.utau()
         for i in {1,3}:
-            self.assertTrue(np.allclose(thmean[i],np.ones(64)))
+            self.assertTrue(np.allclose(thmean[i],np.full(64,1.0/und)))
 
 
     def test_mean_symm3(self):
         thmean = test_32ones.hmean_symm()
         self.assertTrue(np.allclose(thmean[2],np.zeros(16)))
+        und = test_32ones.utau()
         for i in {1,3}:
-            self.assertTrue(np.allclose(thmean[i],np.ones(16)))
+            self.assertTrue(np.allclose(thmean[i],np.full(16,1.0/und)))
 
 
 
@@ -216,8 +218,9 @@ class ChannelTest_std(unittest.TestCase):
 
     def test_std_symm4(self):
         thstd = tst_std.hstd_symm()
+        und = tst_std.utau()
         for i in {1,2,3}:
-            self.assertTrue(np.allclose(thstd[i],np.full(2,0.5)))
+            self.assertTrue(np.allclose(thstd[i],np.full(2,0.5/und)))
 
 
 
@@ -266,6 +269,7 @@ class ChannelTest_cor(unittest.TestCase):
                 self.assertTrue(np.allclose(thcor[1],np.zeros(64)))
 
     def test_cor_symm1(self):
+        und = tst_cor.utau()
         for i in range(3):
             thstd = tst_cor.hstd_symm()
             for j in range(3):
@@ -274,18 +278,19 @@ class ChannelTest_cor(unittest.TestCase):
                     self.assertTrue(np.allclose(thcor[1],np.zeros(2)),"i = %d, j = %d" %(i,j))
                 elif (i,j) in {(0,2),(2,0)}:
                     cor_coeff= np.divide(thcor[1],thstd[i+1]*thstd[j+1])
-                    self.assertTrue(np.allclose(cor_coeff,np.ones(2)),"i = %d, j = %d" %(i,j))
+                    self.assertTrue(np.allclose(cor_coeff,np.full(2,1.0/(und**2))),"i = %d, j = %d" %(i,j))
                 else:
                     self.assertTrue(np.allclose(thcor[1],map(lambda x: x**2,thstd[i+1])))
 
     def test_cor_symm2(self):
+        und = tst_cor.utau()
         for i in range(3):
             thstd = tst1_cor.hstd_symm()
             for j in range(3):
                 thcor = tst1_cor.hcor_symm(U_dict[i],U_dict[j])
                 cor_coeff= np.divide(thcor[1],thstd[i+1]*thstd[j+1])
                 if (i,j) in {(0,2),(2,0)}:
-                    self.assertTrue(np.allclose(cor_coeff,np.full(2,-1.0)),"i = %d, j = %d" %(i,j))
+                    self.assertTrue(np.allclose(cor_coeff,np.full(2,-1.0/(und**2))),"i = %d, j = %d" %(i,j))
                 elif (i,j) in {(0,1),(1,0),(1,2),(2,1)}:
                     self.assertTrue(np.allclose(cor_coeff,np.zeros(2)),"i = %d, j = %d" %(i,j))
                 else:

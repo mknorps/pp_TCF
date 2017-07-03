@@ -3,7 +3,7 @@
 # File name: homfigs.py
 # Created by: gemusia
 # Creation date: 30-06-2017
-# Last modified: 02-07-2017 21:36:27
+# Last modified: 03-07-2017 16:37:41
 # Purpose: module for creating matplotlib figures of
 #          statistics created with module Channel
 #          from 'homstat.py'
@@ -39,15 +39,17 @@ class Homfig:
             getattr(self.ax,'set_'+key)(val)
 
     def hdraw(self):
-        self.ax.plot([0, 1, 2, 3, 4], [0, 1, 2, 3, 4], label="Test", color='g')
+        for arg in self.args:
+            self.ax.plot(arg)
+        #self.ax.plot([0, 1, 2, 3, 4], [0, 1, 2, 3, 4], label="Test", color='g')
         leg = self.ax.legend(loc=4)
 
-    def save(self, name="test2"):
-        self.fig.savefig(name+'.eps')
+    def save(self,name):
+        self.fig.savefig(name)
 
-ff = Homfig (title='very important title',xlabel="xxx",ylabel="yyy")
-ff.hdraw()
-ff.save()
+#ff = Homfig (title='very important title',xlabel="xxx",ylabel="yyy")
+#ff.hdraw()
+#ff.save()
 
 '''
     ax1.plot(DataFiles[cntr][:,0],DataFiles[cntr][:,1], 'k-^', label='model')
