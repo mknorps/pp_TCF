@@ -3,7 +3,7 @@
 # File name: homstat.py
 # Created by: gemusia
 # Creation date: 22-06-2017
-# Last modified: 03-07-2017 16:18:33
+# Last modified: 05-07-2017 22:49:46
 # Purpose: module for computing statistics of 
 #   turbulent channel flow.
 #
@@ -91,7 +91,7 @@ class Channel:
             self.N     = N
             self.M     = M
             self.Retau = Retau
-            self.nuinv = Retau
+            self.nuinv = nuinv
 
     def displayU(self):
         print "Ux = ",self.Ux
@@ -118,7 +118,7 @@ class Channel:
     # here giben as parameter
     # TODO - compute it from the data
     def utau(self):
-        return float(self.Retau)/(self.nuinv)
+        return float(self.Retau)/float(self.nuinv)
 #...............................................................
 #      STATISTICS
 #...............................................................
@@ -182,13 +182,13 @@ class Channel:
     #kinetic energy
     def hek (self):
         return  (self.ynodes(),
-                np.var(self.Ux,axis=ha) +  np.var(self.Uy,axis=ha) +  np.var(self.Uz,axis=ha))
+                np.var(self.Ux,axis=self.ha) +  np.var(self.Uy,axis=self.ha) +  np.var(self.Uz,axis=self.ha))
 
 
     #kinetic energy symmetrised
     def hek_symm (self):
         return  (self.y_nondim(),
-                symm("symm",np.var(self.Ux,axis=ha) +  np.var(self.Uy,axis=ha) +  np.var(self.Uz,axis=ha))/(self.utau()**2)) 
+                symm("symm",np.var(self.Ux,axis=self.ha) +  np.var(self.Uy,axis=self.ha) +  np.var(self.Uz,axis=self.ha))/(self.utau()**2)) 
 
 
 
