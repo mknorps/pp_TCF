@@ -3,7 +3,7 @@
 # File name: apriori_SGS_fluid.py
 # Created by: mknorps 
 # Creation date: 21-06-2017
-# Last modified: 05-07-2017 22:43:34
+# Last modified: 06-07-2017 09:52:37
 # Purpose: take filtered and unfiltered fluid field 
 #          in Fourier space from spectral code 
 #          compute statistics of SGS fluid velocity
@@ -11,9 +11,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 import numpy as np
-import matplotlib.pyplot as plt
 import homstat as hs
-import homfigs as hf
 
 
 
@@ -50,20 +48,20 @@ class ChannelFields:
                         np.transpose(np.loadtxt(Uy).reshape(N,M,K),axes=(2,0,1)),
                         np.transpose(np.loadtxt(Uz).reshape(N,M,K),axes=(2,0,1)),K,N,M))
                 
-    # symmetrised mean over time (T)
-    def statsT(self,stats):
+    # statistics averaged over time (T)
+    def statsT(self,stats,*args):
        
         # tuple is immutable, list is mutable
         # mean_T is gathering mean values from consecutive timesteps, 
         #        so it has to be a list
-        stats_T = list(getattr(getattr(self,"field_"+str(self.fStart)),stats)())
+        stats_T = list(getattr(getattr(self,"field_"+str(self.fStart)),stats)(*args))
 
         for attrNo in range(self.fStart+1,self.fEnd+1): 
-            stats_tmp =getattr(getattr(self,"field_"+str(attrNo)),stats)()
-            for y in range(1,4):
+            stats_tmp =getattr(getattr(self,"field_"+str(attrNo)),stats)(*args)
+            for y in range(1,len(stats_T)):
                 stats_T[y] = stats_T[y] + stats_tmp[y]
 
-	for y in range(1,4):
+	for y in range(1,len(stats_T)):
 	    stats_T[y] = stats_T[y]/float(self.nFiles)
         
         return stats_T 

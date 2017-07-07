@@ -3,7 +3,7 @@
 # File name: homstat.py
 # Created by: gemusia
 # Creation date: 22-06-2017
-# Last modified: 05-07-2017 22:49:46
+# Last modified: 07-07-2017 14:08:47
 # Purpose: module for computing statistics of 
 #   turbulent channel flow.
 #
@@ -182,13 +182,13 @@ class Channel:
     #kinetic energy
     def hek (self):
         return  (self.ynodes(),
-                np.var(self.Ux,axis=self.ha) +  np.var(self.Uy,axis=self.ha) +  np.var(self.Uz,axis=self.ha))
+                (np.var(self.Ux,axis=self.ha) +  np.var(self.Uy,axis=self.ha) +  np.var(self.Uz,axis=self.ha))/3.0)
 
 
     #kinetic energy symmetrised
     def hek_symm (self):
         return  (self.y_nondim(),
-                symm("symm",np.var(self.Ux,axis=self.ha) +  np.var(self.Uy,axis=self.ha) +  np.var(self.Uz,axis=self.ha))/(self.utau()**2)) 
+                symm("symm",np.var(self.Ux,axis=self.ha) +  np.var(self.Uy,axis=self.ha) +  np.var(self.Uz,axis=self.ha))/(3.0*(self.utau()**2))) 
 
 
 
