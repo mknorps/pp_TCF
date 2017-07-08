@@ -1,9 +1,9 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# File name: homstat.py
-# Created by: gemusia
-# Creation date: 22-06-2017
-# Last modified: 07-07-2017 22:31:13
+# File name: particlestat.py
+# Created by: mknorps
+# Creation date: 07-07-2017
+# Last modified: 08-07-2017 17:19:01
 # Purpose: module for computing statistics of 
 #   particles in turbulent channel flow.
 #
@@ -56,31 +56,50 @@ def symm(mode,lst):
     return 0.5*(opt[mode] * lst[:(ll+1)/2] + np.flipud(lst)[:(ll+1)/2])
 
 
+
 #class Particles:
 class Particles:
 
     # homogeneous directions axis
     ha=(0,2)
+
+    #constats - change is rarely neede
     Retau=150
     nuinv=3500
     Nbins = 32
+    Nnodes = Nbins+1
+
+    # dictionary of possible statistics
+    stat_dict = {"mean":(lambda x: x),
+            "mean_sqr":(lambda x: x**2),
+            "cov":(lambda x,y:x*y),
+            "ke":(lambda x,y,z: x**2+y**2+z**2)}
+
+
+
+    #friction velocity used for non-dimensionalisation
+    def utau(self):
+        return float(self.Retau)/float(self.nuinv)
+
 
     # for object initiation we need velocities in three directions (Ux,Uy,Uz)
     # it should be given as three numpy arrays of size (K,N,M)
     def __init__(self,x,y,z,Vx,Vy,Vz,**kwargs):
 
         self.x     = np.array(x)
-        self.y     = np.array(y)
+        self.y     = np.array(y) #wall-normal direction
         self.z     = np.array(z)
         self.N     = len(self.x) #nuber of particles
         self.Vx    = np.array(Vx)
         self.Vy    = np.array(Vy)
         self.Vz    = np.array(Vz)
-        self.ibin  = np.array() #number of bin in which a particle is located
-
-#TODO - finish bin assignment
+        self.ibin  = map(lambda xx: int((Particles.Nbins/np.pi)*np.arccos(xx)),self.y) #number of bin in which a particle is located
 
 
+        self.pbin = [list() for _ in range(Particles.Nbins+1)]
+
+        for particle,yp in enumerate(self.y):
+            self.pbin[self.ibin[particle]].append(particle)    #list of particles located in a separate bin
 
 
         for key,val in kwargs.iteritems():
@@ -88,13 +107,13 @@ class Particles:
 
     # nodes are taken as zeroes of Chebyshev pomynomials
     def ynodes(self):
-        return np.array(map(ChebZeros(self.N-1),range(self.N)))
+        return np.array(map(ChebZeros(Particles.Nnodes-1),range(Particles.Nnodes)))
 
     # symmetrised nodes in nondimensional notation
     # if N is even, we have N/2 nodes
     # if N is odd, we have N/2+1 nodes
     def y_nondim(self):
-        y = self.ynodes()[:(self.N+1)/2]
+        y = self.ynodes()[:(Particles.Nnodes+1)/2]
         return np.array(map(lambda x: (1.0-x)*self.Retau,y))
 
     # cell centers in y direction, non-dimensionalized
@@ -102,81 +121,59 @@ class Particles:
         y = self.y_nondim()
         return 0.5*(y[:len(y)-1]+y[1:])
 
-    #friction velocity used for non-dimensionalisation
-    # here giben as parameter
-    # TODO - compute it from the data
-    def utau(self):
-        return float(self.Retau)/float(self.nuinv)
 #...............................................................
 #      STATISTICS
 #...............................................................
 
 # Symmetrised statistics ar presented in non-dimensional form
-    #mean
-    def hmean (self):
-        return (self.ynodes(),
-                np.mean(self.Ux,axis=self.ha), 
-                np.mean(self.Uy,axis=self.ha), 
-                np.mean(self.Uz,axis=self.ha))
 
-    #mean symmetrised
-    def hmean_symm (self):
-        return (self.y_nondim(),
-                symm("symm",np.mean(self.Ux,axis=self.ha)/self.utau()), 
-                symm("asymm",np.mean(self.Uy,axis=self.ha)/self.utau()), 
-                symm("symm",np.mean(self.Uz,axis=self.ha)/self.utau()))
+    #one-point  statistics
+    def stat1P (self,stat_type,*args):
 
-    #standard deviation
-    def hstd (self):
-        return (self.ynodes(),
-                np.std(self.Ux,axis=self.ha), 
-                np.std(self.Uy,axis=self.ha), 
-                np.std(self.Uz,axis=self.ha))
+        var_list = []
+        statInBin = np.zeros(Particles.Nbins+1)
 
-    #standard deviation symmetrised
-    def hstd_symm (self):
-        return (self.y_nondim(),
-                symm("symm",np.std(self.Ux,axis=self.ha)/self.utau()), 
-                symm("symm",np.std(self.Uy,axis=self.ha)/self.utau()), 
-                symm("symm",np.std(self.Uz,axis=self.ha)/self.utau()))
+        for arg in args:
+            var_list.append(getattr(self,arg))
 
+        val = zip(*var_list)
         
-    #correlation of velocties
-    #E(U1*U2)-E(U1)*E(U2)
-    def hcor (self,vel1,vel2):
-        A1 = getattr(self,vel1)
-        A2 = getattr(self,vel2)
-        return (self.ynodes(),
-                np.mean(A1*A2,axis=self.ha)
-                -np.mean(A1,axis=self.ha)*np.mean(A2,axis=self.ha))
+
+        for particle,_ in enumerate(self.y):
+            ibinp = self.ibin[particle]  # bin where particle 'particle' is located
+            statInBin[ibinp] = statInBin[ibinp] + stat_type(*val[particle])
 
 
-    #correlation of velocties symmetrised
-    #E(U1*U2)-E(U1)*E(U2)
-    def hcor_symm (self,vel1,vel2):
-        A1 = getattr(self,vel1)
-        A2 = getattr(self,vel2)
-        symm_dict = {"Ux":1.0,"Uy":-1.0,"Uz":1.0}
-        def symm_kind(a,b):
-            if a*b==1:
-                return "symm"
+        # to reduce number of divisions, we divide statistics by particle number in bin in a separate loop
+
+        for ibin in range(Particles.Nbins+1):
+            np_ibin = len(self.pbin[ibin]) #number of particles in ith bin
+            if np_ibin == 0:
+                statInBin[ibin] = 0.0
             else:
-                return "asymm"
+                statInBin[ibin] = statInBin[ibin]/float(np_ibin)
 
-        return (self.y_nondim(),
-                symm(symm_kind(symm_dict[vel1],symm_dict[vel2]), np.mean(A1*A2,axis=self.ha)
-                -np.mean(A1,axis=self.ha)*np.mean(A2,axis=self.ha))/(self.utau()**2))
+        return statInBin
 
-    #kinetic energy
-    def hek (self):
-        return  (self.ynodes(),
-                (np.var(self.Ux,axis=self.ha) +  np.var(self.Uy,axis=self.ha) +  np.var(self.Uz,axis=self.ha))/3.0)
+    def pmean (self,arg):
+        return (self.ynodes(),self.stat1P(Particles.stat_dict["mean"],arg))
+
+    def pvar (self,arg):
+        return (self.ynodes(), self.stat1P(Particles.stat_dict["mean_sqr"],arg) - (self.stat1P(Particles.stat_dict["mean"],arg))**2)
+                
+    def pstd (self,arg):
+        return  (self.ynodes(),np.sqrt( self.pvar(arg) ))
+
+    def pcov (self,arg1,arg2):
+        return  (self.ynodes(),self.stat1P(Particles.stat_dict["cov"],arg1,arg2)
+                 - self.pmean(arg1)*self.pmean(arg2))
+
+    def pke (self,arg1,arg2,arg3):
+        return  (self.ynodes(),self.stat1P(Particles.stat_dict["ke"],arg1,arg2,arg3) )
 
 
-    #kinetic energy symmetrised
-    def hek_symm (self):
-        return  (self.y_nondim(),
-                symm("symm",np.var(self.Ux,axis=self.ha) +  np.var(self.Uy,axis=self.ha) +  np.var(self.Uz,axis=self.ha))/(3.0*(self.utau()**2))) 
 
-
-
+    #symmetrisation of chosen statistic (stat: pmean, pvar, pstd, pcov,pke) 
+    # for given argument (for example velocity)
+    def stat_symm (self,stat,mode,*args):
+        return (self.y_nondim(),symm(mode,setattr(self,stat)(*args)[1]))
