@@ -3,7 +3,7 @@
 # File name: particlestat_tests.py
 # Created by: gemusia
 # Creation date: 08-07-2017
-# Last modified: 08-07-2017 16:02:16
+# Last modified: 08-07-2017 21:41:15
 # Purpose:test class for particle statistics (particlestat.py) 
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -41,7 +41,7 @@ class ParticleInitTest(unittest.TestCase):
             self.fail("an unexpected ValueError")
 
 
-class ParticleMeanTest(unittest.TestCase):
+class ParticleStatTest(unittest.TestCase):
 
     def test_mean0(self):
         with self.assertRaises(TypeError):
@@ -62,7 +62,59 @@ class ParticleMeanTest(unittest.TestCase):
     def test_mean3(self):
         self.assertTrue(np.allclose(test.pmean("y")[0][0:16],test.pmean("y")[1][0:16],atol=0.2))
 
+    def test_pvar(self):
+        try:
+            test.pvar("Ux")
+        except ValueError:
+            self.fail("an unexpected ValueError")
 
+    def test_pstd(self):
+        try:
+            test.pvar("Ux")
+        except ValueError:
+            self.fail("an unexpected ValueError")
+
+    def test_pcov(self):
+        try:
+            test.pcov("Vx","Vy")
+        except ValueError:
+            self.fail("an unexpected ValueError")
+
+    def test_pke(self):
+        try:
+            test.pke("Vx","Vy","Vz")
+        except ValueError:
+            self.fail("an unexpected ValueError")
+
+    def test_mean_symm(self):
+        try:
+            test.stat_symm("pmean","symm","Ux")
+        except ValueError:
+            self.fail("an unexpected ValueError")
+
+    def test_pvar_symm(self):
+        try:
+            test.stat_symm("pvar","symm","Ux")
+        except ValueError:
+            self.fail("an unexpected ValueError")
+
+    def test_pstd_symm(self):
+        try:
+            test.stat_symm("pstd","symm","Ux")
+        except ValueError:
+            self.fail("an unexpected ValueError")
+
+    def test_pcov_symm(self):
+        try:
+            test.stat_symm("pcov","symm","Vx","Vy")
+        except ValueError:
+            self.fail("an unexpected ValueError")
+
+    def test_pke_symm(self):
+        try:
+            test.stat_symm("pke","symm","Vx","Vy","Vz")
+        except ValueError:
+            self.fail("an unexpected ValueError")
 #******************************************
 #call of the program
 #******************************************

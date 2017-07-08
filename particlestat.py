@@ -3,7 +3,7 @@
 # File name: particlestat.py
 # Created by: mknorps
 # Creation date: 07-07-2017
-# Last modified: 08-07-2017 17:19:01
+# Last modified: 08-07-2017 21:43:09
 # Purpose: module for computing statistics of 
 #   particles in turbulent channel flow.
 #
@@ -155,6 +155,8 @@ class Particles:
 
         return statInBin
 
+
+
     def pmean (self,arg):
         return (self.ynodes(),self.stat1P(Particles.stat_dict["mean"],arg))
 
@@ -162,11 +164,11 @@ class Particles:
         return (self.ynodes(), self.stat1P(Particles.stat_dict["mean_sqr"],arg) - (self.stat1P(Particles.stat_dict["mean"],arg))**2)
                 
     def pstd (self,arg):
-        return  (self.ynodes(),np.sqrt( self.pvar(arg) ))
+        return  (self.ynodes(),np.sqrt( self.pvar(arg)[1] ))
 
     def pcov (self,arg1,arg2):
         return  (self.ynodes(),self.stat1P(Particles.stat_dict["cov"],arg1,arg2)
-                 - self.pmean(arg1)*self.pmean(arg2))
+                 - self.stat1P(Particles.stat_dict["mean"],arg1)*self.stat1P(Particles.stat_dict["mean"],arg2))
 
     def pke (self,arg1,arg2,arg3):
         return  (self.ynodes(),self.stat1P(Particles.stat_dict["ke"],arg1,arg2,arg3) )
@@ -176,4 +178,4 @@ class Particles:
     #symmetrisation of chosen statistic (stat: pmean, pvar, pstd, pcov,pke) 
     # for given argument (for example velocity)
     def stat_symm (self,stat,mode,*args):
-        return (self.y_nondim(),symm(mode,setattr(self,stat)(*args)[1]))
+        return (self.y_nondim(),symm(mode,getattr(self,stat)(*args)[1]))
