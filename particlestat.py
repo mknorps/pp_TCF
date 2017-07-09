@@ -3,7 +3,7 @@
 # File name: particlestat.py
 # Created by: mknorps
 # Creation date: 07-07-2017
-# Last modified: 08-07-2017 21:43:09
+# Last modified: 09-07-2017 14:54:09
 # Purpose: module for computing statistics of 
 #   particles in turbulent channel flow.
 #
@@ -13,7 +13,7 @@
 #   Statistics may be presented in non-dimensional form as functions of y^+
 #
 #   Input np.array is a 2D array.
-#   for every particle we have following values:
+#   for example we  can have following values:
 #    (x,y,z,Vx,Vy,Vz,
 #     Ux,Uy,Uz,Ufx,Ufy,Ufz,
 #     dUx/dx,dUx/dy,dUx/dz,dUy/dx,dUy/dy,dUz/dz,dUz/dx,dUz/dy,dUz/dz,
@@ -84,17 +84,14 @@ class Particles:
 
     # for object initiation we need velocities in three directions (Ux,Uy,Uz)
     # it should be given as three numpy arrays of size (K,N,M)
-    def __init__(self,x,y,z,Vx,Vy,Vz,**kwargs):
+    def __init__(self,x,y,z,**kwargs):
 
         self.x     = np.array(x)
         self.y     = np.array(y) #wall-normal direction
         self.z     = np.array(z)
         self.N     = len(self.x) #nuber of particles
-        self.Vx    = np.array(Vx)
-        self.Vy    = np.array(Vy)
-        self.Vz    = np.array(Vz)
         self.ibin  = map(lambda xx: int((Particles.Nbins/np.pi)*np.arccos(xx)),self.y) #number of bin in which a particle is located
-
+        self.kw    = kwargs.keys() #keywords from keyword argument kwargs
 
         self.pbin = [list() for _ in range(Particles.Nbins+1)]
 
@@ -104,6 +101,7 @@ class Particles:
 
         for key,val in kwargs.iteritems():
             setattr(self,key,val)
+
 
     # nodes are taken as zeroes of Chebyshev pomynomials
     def ynodes(self):
