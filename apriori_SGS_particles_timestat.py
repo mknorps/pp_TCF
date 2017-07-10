@@ -3,7 +3,7 @@
 # File name: apriori_SGS_particles.py
 # Created by: gemusia
 # Creation date: 08-07-2017
-# Last modified: 10-07-2017 18:28:47
+# Last modified: 10-07-2017 22:38:30
 # Purpose:computation of apriori statistics of particles,
 #         deterministic terms of equation are compared
 #
@@ -66,24 +66,33 @@ pfields=pf.ParticleFields(2501,2519,fCoreName=path+"/fede_terms_",x=2,y=0,z=1,ft
 
 for StNo in ptype:
 
+    statArgList = [] #list of statistics that will be computed
+
     for stattype in ("pmean","pstd"):
         for key,val2 in terms.iteritems():
-            pstatf = pfields.statsP(StNo,stattype,"symm","f"+val2)
-            pstatp = pfields.statsP(StNo,stattype,"symm","p"+val2)
+            statArgList.append([stattype,"symm","f"+val2])
+            statArgList.append([stattype,"symm","p"+val2])
+    
+    pstat = pfields.statsP(StNo,*statArgList) #computation of all required statistic
+                                            #to improve efficiency and not opening
+                                            #big data files too many times
 
             #figures
+    for key1,_,key2 in statArgList:
 
-            statfig = hfig.Homfig(title=key, ylabel=key)
+        arg = key1+''.join(key2)
+        statfig = hfig.Homfig(title=key, ylabel=key)
 
-            statfig.add_plot(*pstatf,linestyle=LineStyle['fterm'],label='fterm')
-            statfig.add_plot(*pstatp,linestyle=LineStyle['pterm'],label='pterm')
-            
-            statfig.hdraw()
-            plotFileName = pict_path + val2 +"_"+stattype+"_"+StNo+".eps"
-            statfig.save(plotFileName)
-            print "plot created: " + plotFileName
+        #TODO
+        statfig.add_plot(pstat[arg],linestyle=LineStyle['fterm'],label='fterm')
+       # statfig.add_plot(*pstatp,linestyle=LineStyle['pterm'],label='pterm')
+        
+        statfig.hdraw()
+        plotFileName = pict_path + arg +"_"+StNo+".eps"
+        statfig.save(plotFileName)
+        print "plot created: " + plotFileName
 
-            plt.close(statfig.fig)
+        plt.close(statfig.fig)
 
 '''
 tf=np.transpose(np.loadtxt("200_particles"))

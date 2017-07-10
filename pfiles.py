@@ -3,7 +3,7 @@
 # File name: apriori_SGS_fluid.py
 # Created by: mknorps 
 # Creation date: 21-06-2017
-# Last modified: 10-07-2017 17:54:31
+# Last modified: 10-07-2017 22:39:39
 # Purpose: take filtered and unfiltered fluid field 
 #          in Fourier space from spectral code 
 #          compute statistics of SGS fluid velocity
@@ -38,16 +38,20 @@ class ParticleFields:
     # it computes statistic of name 'stattype' with arguments *statargs
     # and symmetrisation type 'symm'
     # for all type of particles
-    def statsP(self,StNo,stattype,symmtype,*statargs):
+
+    def statsP(self,StNo,*args):
      
-        # 0th element of this list is a list of y nodes
-        stats_PT = [list(np.zeros(ps.Particles.Nnodes/2+1)), list(np.zeros(ps.Particles.Nnodes/2+1))]
+        # initialise vector containing particle time statistics
+        stats_PT = {}
+        for arg in args:
+            stats_PT[arg[0]+''.join(arg[2])] = list(np.zeros(ps.Particles.Nnodes/2+1))
 
 
-        for name in ifilter(lambda x: x.endswith(StNo),self.fNames):
-            print name
+        for name in ifilter(lambda x: x.endswith(StNo),self.fNames): #loop over time steps
+
 
             with open(name,'r') as current_file:
+
                 raw_data = np.transpose(np.loadtxt(current_file))
 
                 # setting up data structure
@@ -60,12 +64,24 @@ class ParticleFields:
                 # mean_T is gathering mean values from consecutive timesteps, 
                 #        so it has to be a list
                 Pdata = ps.Particles(*map(lambda i: raw_data[i],arglist),**kwarglist) #object of class Particles
-                stats_PT[0] = Pdata.stat_symm(stattype,symmtype,*statargs)[0]
-                stats_PT[1] = stats_PT[1] + Pdata.stat_symm(stattype,symmtype,*statargs)[1]
+
+                stats_PT["yplus"] = Pdata.y_nondim()  #nodes in y direction
 
 
-        stats_PT[1] = stats_PT[1]/float(self.nFiles)
+                for cntr,arg in enumerate(args): #loop over choosen statistics and variables
+
+                    stattype = arg[0] #string
+                    symmtype = arg[1] #string
+                    statargs = arg[2] #list
+
+                    dictarg =[arg[0]+''.join(arg[2])] 
+                    stats_PT[dictarg] = stats_PT[dictarg] + Pdata.stat_symm(stattype,symmtype,*statargs)[1]
+
+        for i in stats_PT.keys():
+
+            stats_PT[i] = stats_PT[i]/float(self.nFiles)
             
+
         return stats_PT 
 
 
