@@ -3,7 +3,7 @@
 # File name: apriori_SGS_particles.py
 # Created by: gemusia
 # Creation date: 08-07-2017
-# Last modified: 10-07-2017 12:23:50
+# Last modified: 10-07-2017 18:28:47
 # Purpose:computation of apriori statistics of particles,
 #         deterministic terms of equation are compared
 #
@@ -13,6 +13,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import particlestat as ps
+import pfiles as pf
 import homfigs as hfig
 from os.path import expanduser
 
@@ -57,28 +58,30 @@ statistics = {0:("pmean",),1:("pstd",),
 #we permute (x,y,z)->(z,x,y)
 
 path = expanduser("~") + "/wyniki/apriori/fede_terms_pDNS"
+pict_path = "picts/"
 
-for val in ptype:
-    tf=np.transpose(np.loadtxt(path+"/fede_terms_2501_"+val))
+pfields=pf.ParticleFields(2501,2519,fCoreName=path+"/fede_terms_",x=2,y=0,z=1,ftermx=5,ftermy=3,ftermz=4, ptermx=8,ptermy=6,ptermz=7)
+#pfields=pf.ParticleFields(2501,2502,fCoreName=path+"/fede_terms_",x=2,y=0,z=1,ftermx=5,ftermy=3,ftermz=4, ptermx=8,ptermy=6,ptermz=7)
 
-    part = ps.Particles(tf[2],tf[0],tf[1],
-          ftermx=tf[5],ftermy=tf[3],ftermz=tf[4],
-          ptermx=tf[8],ptermy=tf[6],ptermz=tf[7])
+
+for StNo in ptype:
 
     for stattype in ("pmean","pstd"):
         for key,val2 in terms.iteritems():
-            stat_fterm = part.stat_symm(stattype,"symm","f"+val2)
-            stat_pterm = part.stat_symm(stattype,"symm","p"+val2)
+            pstatf = pfields.statsP(StNo,stattype,"symm","f"+val2)
+            pstatp = pfields.statsP(StNo,stattype,"symm","p"+val2)
 
             #figures
 
             statfig = hfig.Homfig(title=key, ylabel=key)
 
-            statfig.add_plot(*stat_fterm,linestyle=LineStyle['fterm'],label='fterm')
-            statfig.add_plot(*stat_pterm,linestyle=LineStyle['pterm'],label='pterm')
+            statfig.add_plot(*pstatf,linestyle=LineStyle['fterm'],label='fterm')
+            statfig.add_plot(*pstatp,linestyle=LineStyle['pterm'],label='pterm')
             
             statfig.hdraw()
-            statfig.save(val2 +"_"+stattype+"_"+val+".eps")
+            plotFileName = pict_path + val2 +"_"+stattype+"_"+StNo+".eps"
+            statfig.save(plotFileName)
+            print "plot created: " + plotFileName
 
             plt.close(statfig.fig)
 

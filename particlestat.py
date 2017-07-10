@@ -3,7 +3,7 @@
 # File name: particlestat.py
 # Created by: mknorps
 # Creation date: 07-07-2017
-# Last modified: 09-07-2017 14:54:09
+# Last modified: 10-07-2017 16:03:03
 # Purpose: module for computing statistics of 
 #   particles in turbulent channel flow.
 #
@@ -89,7 +89,7 @@ class Particles:
         self.x     = np.array(x)
         self.y     = np.array(y) #wall-normal direction
         self.z     = np.array(z)
-        self.N     = len(self.x) #nuber of particles
+        self.N     = len(self.x) #number of particles
         self.ibin  = map(lambda xx: int((Particles.Nbins/np.pi)*np.arccos(xx)),self.y) #number of bin in which a particle is located
         self.kw    = kwargs.keys() #keywords from keyword argument kwargs
 
