@@ -1,0 +1,4 @@
+#find directory
+SITEDIR=$(python -m site --user-site)
+
+mk

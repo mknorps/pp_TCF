@@ -3,7 +3,7 @@
 # File name: apriori_SGS_fluid.py
 # Created by: mknorps 
 # Creation date: 21-06-2017
-# Last modified: 07-07-2017 15:31:19
+# Last modified: 11-07-2017 13:01:18
 # Purpose: take filtered and unfiltered fluid field 
 #          in Fourier space from spectral code 
 #          compute statistics of SGS fluid velocity
@@ -16,6 +16,7 @@ import homstat as hs
 import homfiles as hf
 import homfigs as hfig
 import itertools as it
+from os.path import expanduser
 
 
 
@@ -36,8 +37,10 @@ ptitles = {"hmean_symm":"mean of U","hstd_symm":"Standard deviation of U","hcor_
 
 
 #data loading
-test_set_DNS = hf.ChannelFields(128,129,128,2501,2502, fPrefix=["upp_Ux","upp_Uy","upp_Uz"])
-test_set_LES = hf.ChannelFields(32,33,64,2501,2502, fPrefix=["uppf_Ux","uppf_Uy","uppf_Uz"])
+file_path    = expanduser("~") + "/wyniki/apriori/fluid/"
+fig_path     = file_path
+test_set_DNS = hf.ChannelFields(128,129,128,2501,2502,fPath = file_path, fPrefix=["upp_Ux","upp_Uy","upp_Uz"])
+test_set_LES = hf.ChannelFields(32,33,64,2501,2502, fPath = file_path,fPrefix=["uppf_Ux","uppf_Uy","uppf_Uz"])
 
 
 for skey,sval in statistics.iteritems():
@@ -61,7 +64,7 @@ for skey,sval in statistics.iteritems():
         statfig.add_plot(stat_DNS[0],stat_DNS[a],linestyle=LineStyle['DNS'],label='DNS')
         statfig.add_plot(stat_LES[0],stat_LES[a],linestyle=LineStyle['LES'],label='LES')
         statfig.hdraw()
-        statfig.save(''.join(sval) + ".eps")
+        statfig.save(fig_path + ''.join(sval) + ".eps")
 
     #meanfig.hdraw()
     plt.close(statfig.fig)

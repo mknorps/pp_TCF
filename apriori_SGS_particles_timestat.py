@@ -3,7 +3,7 @@
 # File name: apriori_SGS_particles.py
 # Created by: gemusia
 # Creation date: 08-07-2017
-# Last modified: 11-07-2017 11:17:25
+# Last modified: 11-07-2017 13:58:47
 # Purpose:computation of apriori statistics of particles,
 #         deterministic terms of equation are compared
 #
@@ -16,7 +16,7 @@ import particlestat as ps
 import pfiles as pf
 import homfigs as hfig
 from os.path import expanduser
-
+from itertools import ifilterfalse
 
 
 # declaration of picture attributes
@@ -57,11 +57,10 @@ statistics = {0:("pmean",),1:("pstd",),
 #
 #we permute (x,y,z)->(z,x,y)
 
-path = expanduser("~") + "/wyniki/apriori/fede_terms_pDNS"
-pict_path = "picts/"
+file_path = expanduser("~") + "/wyniki/apriori/fede_terms_pDNS/"
+pict_path = file_path
 
-pfields=pf.ParticleFields(2501,2519,fCoreName=path+"/fede_terms_",x=2,y=0,z=1,ftermx=5,ftermy=3,ftermz=4, ptermx=8,ptermy=6,ptermz=7)
-#pfields=pf.ParticleFields(2501,2502,fCoreName=path+"/fede_terms_",x=2,y=0,z=1,ftermx=5,ftermy=3,ftermz=4, ptermx=8,ptermy=6,ptermz=7)
+pfields=pf.ParticleFields(2501,2519,fCoreName=file_path+"fede_terms_",x=2,y=0,z=1,ftermx=5,ftermy=3,ftermz=4, ptermx=8,ptermy=6,ptermz=7)
 
 
 for StNo in ptype:
@@ -72,20 +71,23 @@ for StNo in ptype:
         for key,val2 in terms.iteritems():
             statArgList.append([stattype,"symm",["f"+val2]])
             statArgList.append([stattype,"symm",["p"+val2]])
-    
+   
+   # print statArgList
+
     pstat = pfields.statsP(StNo,*statArgList) #computation of all required statistic
                                             #to improve efficiency and not opening
                                             #big data files too many times
+    print map(lambda x: x[1:],pstat.keys())
 
             #figures
-    for key1,_,key2 in statArgList:
+    for arg in ifilterfalse(lambda x: x=="plus", set(map(lambda y: y[1:],pstat.keys()))): #custom , for this case
 
-        arg = key1+''.join(key2)
-        statfig = hfig.Homfig(title=key, ylabel=key)
+        statfig = hfig.Homfig(title=arg, ylabel=arg)
+        print arg
 
         #TODO
-        statfig.add_plot(pstat[arg],linestyle=LineStyle['fterm'],label='fterm')
-       # statfig.add_plot(*pstatp,linestyle=LineStyle['pterm'],label='pterm')
+        statfig.add_plot(pstat["yplus"],pstat["f"+arg],linestyle=LineStyle['fterm'],label='fterm')
+        statfig.add_plot(pstat["yplus"],pstat["p"+arg],linestyle=LineStyle['pterm'],label='pterm')
         
         statfig.hdraw()
         plotFileName = pict_path + arg +"_"+StNo+".eps"

@@ -3,7 +3,7 @@
 # File name: apriori_SGS_particles.py
 # Created by: gemusia
 # Creation date: 08-07-2017
-# Last modified: 10-07-2017 12:23:50
+# Last modified: 11-07-2017 13:20:35
 # Purpose:computation of apriori statistics of particles,
 #         deterministic terms of equation are compared
 #
@@ -56,10 +56,10 @@ statistics = {0:("pmean",),1:("pstd",),
 #
 #we permute (x,y,z)->(z,x,y)
 
-path = expanduser("~") + "/wyniki/apriori/fede_terms_pDNS"
-
+file_path = expanduser("~") + "/wyniki/apriori/fede_terms_pDNS/"
+fig_path = file_path + 'one_file_stat/'
 for val in ptype:
-    tf=np.transpose(np.loadtxt(path+"/fede_terms_2501_"+val))
+    tf=np.transpose(np.loadtxt(file_path+"fede_terms_2501_"+val))
 
     part = ps.Particles(tf[2],tf[0],tf[1],
           ftermx=tf[5],ftermy=tf[3],ftermz=tf[4],
@@ -78,7 +78,7 @@ for val in ptype:
             statfig.add_plot(*stat_pterm,linestyle=LineStyle['pterm'],label='pterm')
             
             statfig.hdraw()
-            statfig.save(val2 +"_"+stattype+"_"+val+".eps")
+            statfig.save(fig_path + val2 +"_"+stattype+"_"+val+".eps")
 
             plt.close(statfig.fig)
 
