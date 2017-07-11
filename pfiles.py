@@ -3,7 +3,7 @@
 # File name: apriori_SGS_fluid.py
 # Created by: mknorps 
 # Creation date: 21-06-2017
-# Last modified: 10-07-2017 22:39:39
+# Last modified: 11-07-2017 10:50:22
 # Purpose: take filtered and unfiltered fluid field 
 #          in Fourier space from spectral code 
 #          compute statistics of SGS fluid velocity
@@ -74,7 +74,7 @@ class ParticleFields:
                     symmtype = arg[1] #string
                     statargs = arg[2] #list
 
-                    dictarg =[arg[0]+''.join(arg[2])] 
+                    dictarg =arg[0]+''.join(arg[2]) 
                     stats_PT[dictarg] = stats_PT[dictarg] + Pdata.stat_symm(stattype,symmtype,*statargs)[1]
 
         for i in stats_PT.keys():

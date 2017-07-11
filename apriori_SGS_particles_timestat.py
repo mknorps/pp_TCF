@@ -3,7 +3,7 @@
 # File name: apriori_SGS_particles.py
 # Created by: gemusia
 # Creation date: 08-07-2017
-# Last modified: 10-07-2017 22:38:30
+# Last modified: 11-07-2017 11:17:25
 # Purpose:computation of apriori statistics of particles,
 #         deterministic terms of equation are compared
 #
@@ -70,8 +70,8 @@ for StNo in ptype:
 
     for stattype in ("pmean","pstd"):
         for key,val2 in terms.iteritems():
-            statArgList.append([stattype,"symm","f"+val2])
-            statArgList.append([stattype,"symm","p"+val2])
+            statArgList.append([stattype,"symm",["f"+val2]])
+            statArgList.append([stattype,"symm",["p"+val2]])
     
     pstat = pfields.statsP(StNo,*statArgList) #computation of all required statistic
                                             #to improve efficiency and not opening
