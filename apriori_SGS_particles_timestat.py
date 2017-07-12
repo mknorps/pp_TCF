@@ -3,7 +3,7 @@
 # File name: apriori_SGS_particles.py
 # Created by: gemusia
 # Creation date: 08-07-2017
-# Last modified: 11-07-2017 13:58:47
+# Last modified: 11-07-2017 15:00:45
 # Purpose:computation of apriori statistics of particles,
 #         deterministic terms of equation are compared
 #
@@ -72,18 +72,15 @@ for StNo in ptype:
             statArgList.append([stattype,"symm",["f"+val2]])
             statArgList.append([stattype,"symm",["p"+val2]])
    
-   # print statArgList
 
     pstat = pfields.statsP(StNo,*statArgList) #computation of all required statistic
                                             #to improve efficiency and not opening
                                             #big data files too many times
-    print map(lambda x: x[1:],pstat.keys())
 
             #figures
     for arg in ifilterfalse(lambda x: x=="plus", set(map(lambda y: y[1:],pstat.keys()))): #custom , for this case
 
         statfig = hfig.Homfig(title=arg, ylabel=arg)
-        print arg
 
         #TODO
         statfig.add_plot(pstat["yplus"],pstat["f"+arg],linestyle=LineStyle['fterm'],label='fterm')
