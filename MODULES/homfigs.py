@@ -3,7 +3,7 @@
 # File name: homfigs.py
 # Created by: gemusia
 # Creation date: 30-06-2017
-# Last modified: 07-07-2017 12:37:59
+# Last modified: 18-07-2017 11:59:53
 # Purpose: module for creating matplotlib figures of
 #          statistics created with module Channel
 #          from 'homstat.py'
@@ -45,11 +45,11 @@ class Homfig:
     def add_plot(self,*plt_args,**plt_kwargs):
         self.plt_data.append((plt_args,plt_kwargs))
 
-    def hdraw(self):
+    def hdraw(self,leg_loc=0):
         for args,kwargs in self.plt_data:
             # *args - unpacked as positional arguments
             self.ax.plot(*args,**kwargs)
-            leg = self.ax.legend(loc=4)
+            leg = self.ax.legend(loc=leg_loc)
 
     def save(self,name):
         self.fig.savefig(name)

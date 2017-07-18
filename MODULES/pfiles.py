@@ -3,7 +3,7 @@
 # File name: apriori_SGS_fluid.py
 # Created by: mknorps 
 # Creation date: 21-06-2017
-# Last modified: 11-07-2017 13:50:19
+# Last modified: 12-07-2017 16:35:39
 # Purpose: take filtered and unfiltered fluid field 
 #          in Fourier space from spectral code 
 #          compute statistics of SGS fluid velocity
@@ -12,7 +12,7 @@
 
 import numpy as np
 import particlestat as ps
-from itertools import ifilter
+from itertools import ifilter,ifilterfalse
 
 
 
@@ -77,12 +77,62 @@ class ParticleFields:
                     dictarg =''.join(arg[2]) +arg[0]
                     stats_PT[dictarg] = stats_PT[dictarg] + Pdata.stat_symm(stattype,symmtype,*statargs)[1]
 
-        for i in stats_PT.keys():
+        for i in ifilterfalse(lambda x: x=="yplus", stats_PT.keys()):
 
             stats_PT[i] = stats_PT[i]/float(self.nFiles)
             
 
         return stats_PT 
 
+#TODO - reduce the spaghetti code
+    #method for performing some computations (function f) on the input (*args)
+    # args is a list of list of arguments of ndarray type, 
+    # we want to compare several 
+    # different input for the same function
+    # for example f(x,y,z) = (x-y)*z
+    def equationP(self,StNo,f,stattype,symmtype,*args): 
+        
+        # initialise vector containing particle time statistics
+        stats_PT = {}
 
+
+        for argl in args:
+
+            stats_PT[''.join(argl)] = list(np.zeros(ps.Particles.Nnodes/2+1))
+
+
+        for name in ifilter(lambda x: x.endswith(StNo),self.fNames): #loop over time steps
+
+            with open(name,'r') as current_file:
+
+                raw_data = np.transpose(np.loadtxt(current_file))
+
+                # setting up data structure
+                spaceCoordinates  = [self.kwargs["x"],self.kwargs["y"],self.kwargs["z"]]
+                kwarglist= {}
+
+                #computing function of input raw data arguments
+                for arglist in args:
+                    kwarglist[''.join(arglist)]= f(*map(lambda x: raw_data[self.kwargs[x]],arglist)) 
+
+                # tuple is immutable, list is mutable
+                # mean_T is gathering mean values from consecutive timesteps, 
+                #        so it has to be a list
+                Pdata = ps.Particles(*map(lambda xx: raw_data[xx],spaceCoordinates),**kwarglist) #object of class Particles
+
+                stats_PT["yplus"] = Pdata.y_nondim()  #nodes in y direction
+
+
+                for kwlistkey,kwlistval in kwarglist.iteritems(): #loop over choosen statistics and variables
+
+                    stats_PT[kwlistkey] = stats_PT[kwlistkey] + Pdata.stat_symm(stattype,symmtype,kwlistkey)[1]
+#                    print kwarglist.keys(), kwlistkey, type(stats_PT[kwlistkey])
+
+        for i in ifilterfalse(lambda x: x=="yplus", stats_PT.keys()):
+
+
+            stats_PT[i] = stats_PT[i]/float(self.nFiles)
+            
+
+        return stats_PT 
 
