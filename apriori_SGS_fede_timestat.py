@@ -3,7 +3,7 @@
 # File name: apriori_SGS_fede_timestat.py
 # Created by: gemusia
 # Creation date: 11-07-2017
-# Last modified: 12-07-2017 16:57:23
+# Last modified: 12-08-2017 08:48:12
 # Purpose:computation of apriori statistics of particles,
 #        statistic derived from scratch 
 #      - test of possible substitution of (V-U)du^*/dx term 
@@ -59,8 +59,12 @@ pict_path = file_path
 
 pfields= pf.ParticleFields(2501,2508,fCoreName=file_path+"SGS_terms_",x=2,y=0,z=1,Vx=5,Vy=3,Vz=4,
      Ux=8,Uy=6,Uz=7,Ufx=11,Ufy=9,Ufz=10, 
-     dUxdx=20,dUxdy=18,dUxdz=19, dUydx=14,dUydy=12,dUydz=13, dUzdx=17,dUzdy=15,dUzdz=16, 
-     dUfxdx=29,dUfxdy=27,dUfxdz=28, dUfydx=23,dUfydy=21,dUfydz=22, dUfzdx=26,dUfzdy=24,dUfzdz=25)
+     dUxdx=20,dUxdy=14,dUxdz=17, dUydx=18,dUydy=12,dUydz=15, dUzdx=19,dUzdy=13,dUzdz=16, 
+     dUfxdx=29,dUfxdy=23,dUfxdz=26, dUfydx=27,dUfydy=21,dUfydz=24, dUfzdx=28,dUfzdy=22,dUfzdz=25)
+#pfields= pf.ParticleFields(2501,2508,fCoreName=file_path+"SGS_terms_",x=2,y=0,z=1,Vx=5,Vy=3,Vz=4,
+#     Ux=8,Uy=6,Uz=7,Ufx=11,Ufy=9,Ufz=10, 
+#     dUxdx=20,dUxdy=18,dUxdz=19, dUydx=14,dUydy=12,dUydz=13, dUzdx=17,dUzdy=15,dUzdz=16, 
+#     dUfxdx=29,dUfxdy=27,dUfxdz=28, dUfydx=23,dUfydy=21,dUfydz=22, dUfzdx=26,dUfzdy=24,dUfzdz=25)
 
 def pterm(V1,V2,V3,U1,U2,U3,dUdx,dUdy,dUdz,dUfdx,dUfdy,dUfdz):
     return (V1-U1)*(dUdx-dUfdx) + (V2-U2)*(dUdy-dUfdy) + (V3-U3)*(dUdz-dUfdz)

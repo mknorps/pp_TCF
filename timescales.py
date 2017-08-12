@@ -3,7 +3,7 @@
 # File name: timescales.py
 # Created by: gemusia
 # Creation date: 26-07-2017
-# Last modified: 28-07-2017 16:11:38
+# Last modified: 01-08-2017 14:13:09
 # Purpose: draw plots of time scales of turbulent channel flow
 #          DNS, a priori LES, LES and SGS
 #
@@ -44,16 +44,22 @@ LineStyle = {'fterm':'solid','pterm':'dashed',
         "UxUfx":'solid',"UyUfy":'dashed',"UzUfz":'dotted',
         "fluid":'solid',"St1":'dashed',"St5":'dotted',"St25":'dashdot'}
 
+ptype_dt = {"LES":dt_LES,"SGSles":dt_DNS,"SGSdns":dt_DNS,"DNS":dt_DNS, "apriori":dt_DNS}
 
 #ptype = ["DNS","LES","apriori","SGSles","SGSdns"]
 #Stlist = ["fluid","St0.1","St1","St5","St25"]
+ptype = ["LES"]
+
+Stlist = ["St1","St5","St25","St125"]
+
+start_iteration = np.arange(6805,6855,5)  #start iteration list
+'''
 ptype = ["SGSles","SGSdns"]
-ptype_dt = {"SGSles":dt_DNS,"SGSdns":dt_DNS}
 
 Stlist = ["fluid","St1"]
 
 start_iteration = [2555,2560,2565,2570,2573,2577,2580]  #start iteration list
-
+'''
 datalines = {0:{"ls": "solid","c": "green","lbl":"y=1"},
              2:{"ls": "dashed","c": "blue","lbl":"y=3"},
              5:{"ls": "dotted","c": "black","lbl":"y=6"},
@@ -94,6 +100,7 @@ tau = {}
 for simulation, St in product (ptype, Stlist):
 
 
+    print "working on ", simulation, St
     #++++++++++++++++++++++++++++++++++++++++++++++
     # reading multiple files, symmetrising and 
     # averaging the data in
@@ -114,8 +121,10 @@ for simulation, St in product (ptype, Stlist):
     #++++++++++++++++++++++++++++++++++++++++++++++
     # computing relaxation time tau = min {t; rho(t)<1\e}
 
-    tau[St + "_" + simulation] = map(lambda x: ptype_dt[simulation]*next(i for i,v in enumerate(x) if v<np.exp(-1)),rho[St + "_" + simulation]) 
-    print "tau = ", tau[St + "_" + simulation]
+    print next(i for i,v in enumerate(rho[St + "_" + simulation][7]) if v<np.exp(-1))
+
+    tau[St + "_" + simulation] = map(lambda x: ptype_dt[simulation]*
+            next(i for i,v in enumerate(x) if (v<np.exp(-1) or i==len(x)-1)),rho[St + "_" + simulation]) 
 
 
 
@@ -143,6 +152,21 @@ for simulation, St in product (ptype, Stlist):
     plt.close(corrfig.fig)
 
 
+
+for simulation in ptype:
+    # correlation time plot
+    taufig = hfig.Homfig(title= " Relaxation time for particles in " +simulation , 
+                               ylabel="$/tau$", xlabel="y", xlim=[0,8])
+
+    plotFileName = pict_path + "tau_"+ simulation+".eps"
+
+    for St in Stlist:
+        taufig.add_plot(tau[St + "_" + simulation],label=St)
+	
+    taufig.hdraw()
+    taufig.save(plotFileName)
+    print "plot created: " + plotFileName
+    plt.close(taufig.fig)
 
 
 # plots of correlation coefficient DNS vs a priori LES

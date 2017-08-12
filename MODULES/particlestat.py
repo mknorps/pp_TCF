@@ -3,7 +3,7 @@
 # File name: particlestat.py
 # Created by: mknorps
 # Creation date: 07-07-2017
-# Last modified: 10-07-2017 16:03:03
+# Last modified: 12-08-2017 18:39:20
 # Purpose: module for computing statistics of 
 #   particles in turbulent channel flow.
 #
@@ -177,3 +177,7 @@ class Particles:
     # for given argument (for example velocity)
     def stat_symm (self,stat,mode,*args):
         return (self.y_nondim(),symm(mode,getattr(self,stat)(*args)[1]))
+  
+  
+    def statistics (self,stat,*args):
+        return (self.ynodes(),getattr(self,stat)(*args)[1])

@@ -3,7 +3,7 @@
 # File name: apriori_SGS_fluid.py
 # Created by: mknorps 
 # Creation date: 21-06-2017
-# Last modified: 12-07-2017 16:35:39
+# Last modified: 12-08-2017 18:40:00
 # Purpose: take filtered and unfiltered fluid field 
 #          in Fourier space from spectral code 
 #          compute statistics of SGS fluid velocity
@@ -90,7 +90,7 @@ class ParticleFields:
     # we want to compare several 
     # different input for the same function
     # for example f(x,y,z) = (x-y)*z
-    def equationP(self,StNo,f,stattype,symmtype,*args): 
+    def equationP(self,StNo,f,stattype,symmetryType='none',*args): 
         
         # initialise vector containing particle time statistics
         stats_PT = {}
@@ -98,7 +98,10 @@ class ParticleFields:
 
         for argl in args:
 
-            stats_PT[''.join(argl)] = list(np.zeros(ps.Particles.Nnodes/2+1))
+            if symmetryType <> 'none':
+                stats_PT[''.join(argl)] = list(np.zeros(ps.Particles.Nnodes/2+1))
+            else:
+                stats_PT[''.join(argl)] = list(np.zeros(ps.Particles.Nnodes))
 
 
         for name in ifilter(lambda x: x.endswith(StNo),self.fNames): #loop over time steps
@@ -120,12 +123,19 @@ class ParticleFields:
                 #        so it has to be a list
                 Pdata = ps.Particles(*map(lambda xx: raw_data[xx],spaceCoordinates),**kwarglist) #object of class Particles
 
-                stats_PT["yplus"] = Pdata.y_nondim()  #nodes in y direction
+                if symmetryType <> 'none':
+                    stats_PT["yplus"] = Pdata.y_nondim()  #nodes in y direction
+                else:
+                    stats_PT["yplus"] = Pdata.ynodes()  #nodes in y direction
 
 
                 for kwlistkey,kwlistval in kwarglist.iteritems(): #loop over choosen statistics and variables
 
-                    stats_PT[kwlistkey] = stats_PT[kwlistkey] + Pdata.stat_symm(stattype,symmtype,kwlistkey)[1]
+                    if symmetryType <> 'none':
+                        stats_PT[kwlistkey] = stats_PT[kwlistkey] + Pdata.stat_symm(stattype,symmetryType,kwlistkey)[1]
+                    else:
+                        stats_PT[kwlistkey] = stats_PT[kwlistkey] + Pdata.statistics(stattype,kwlistkey)[1]
+
 #                    print kwarglist.keys(), kwlistkey, type(stats_PT[kwlistkey])
 
         for i in ifilterfalse(lambda x: x=="yplus", stats_PT.keys()):
