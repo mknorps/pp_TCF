@@ -3,7 +3,7 @@
 # File name: apriori_SGS_fluid.py
 # Created by: mknorps 
 # Creation date: 21-06-2017
-# Last modified: 12-08-2017 18:40:00
+# Last modified: 13-08-2017 16:41:40
 # Purpose: take filtered and unfiltered fluid field 
 #          in Fourier space from spectral code 
 #          compute statistics of SGS fluid velocity
@@ -96,12 +96,12 @@ class ParticleFields:
         stats_PT = {}
 
 
-        for argl in args:
+        for num,argl in enumerate(args):
 
             if symmetryType <> 'none':
-                stats_PT[''.join(argl)] = list(np.zeros(ps.Particles.Nnodes/2+1))
+                stats_PT[str(num)+''.join(argl)] = list(np.zeros(ps.Particles.Nnodes/2+1))
             else:
-                stats_PT[''.join(argl)] = list(np.zeros(ps.Particles.Nnodes))
+                stats_PT[str(num)+''.join(argl)] = list(np.zeros(ps.Particles.Nnodes))
 
 
         for name in ifilter(lambda x: x.endswith(StNo),self.fNames): #loop over time steps
@@ -115,8 +115,9 @@ class ParticleFields:
                 kwarglist= {}
 
                 #computing function of input raw data arguments
-                for arglist in args:
-                    kwarglist[''.join(arglist)]= f(*map(lambda x: raw_data[self.kwargs[x]],arglist)) 
+                for num,arglist in enumerate(args):
+                    kwarglist[str(num)+''.join(arglist)]= f(*map(lambda x: raw_data[self.kwargs[x]],arglist)) 
+                print "MODULE:",  kwarglist.keys()
 
                 # tuple is immutable, list is mutable
                 # mean_T is gathering mean values from consecutive timesteps, 

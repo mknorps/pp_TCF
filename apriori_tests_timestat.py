@@ -3,7 +3,7 @@
 # File name: apriori_tests_timestat.py
 # Created by: gemusia
 # Creation date: 21-07-2017
-# Last modified: 12-08-2017 20:40:58
+# Last modified: 13-08-2017 17:27:55
 # Purpose:computation of apriori statistics of particles,
 #        statistic derived from scratch 
 #      - test of possible substitution of (V-U)du^*/dx term 
@@ -17,7 +17,7 @@ import particlestat as ps
 import pfiles as pf
 import homfigs as hfig
 from os.path import expanduser
-from itertools import ifilterfalse
+from itertools import ifilter
 
 
 # declaration of picture attributes
@@ -57,7 +57,7 @@ file_path = expanduser("~") + "/wyniki/apriori/fede_terms_pDNS/"
 pict_path = file_path
 
 #DATA STRUCTURE
-pfields= pf.ParticleFields(2501,2508,fCoreName=file_path+"SGS_terms_",x=2,y=0,z=1,Vx=5,Vy=3,Vz=4,
+pfields= pf.ParticleFields(2501,2501,fCoreName=file_path+"SGS_terms_",x=2,y=0,z=1,Vx=5,Vy=3,Vz=4,
      Ux=8,Uy=6,Uz=7,Ufx=11,Ufy=9,Ufz=10, 
      dUxdx=20,dUxdy=14,dUxdz=17, dUydx=18,dUydy=12,dUydz=15, dUzdx=19,dUzdy=13,dUzdz=16, 
      dUfxdx=29,dUfxdy=23,dUfxdz=26, dUfydx=27,dUfydy=21,dUfydz=24, dUfzdx=28,dUfzdy=22,dUfzdz=25)
@@ -110,6 +110,12 @@ for StNo in ptype:
 
     for stattype in ("pmean","pstd"):
 
+        def keys_no_yplus(arg):   #keys except "yplus"
+            #return ifilterfalse(lambda x: x=="yplus", set(arg))
+            arg_sorted = sorted(arg)
+            return ifilter(lambda x: x<>"yplus", arg_sorted)
+        
+
         # STATISTICS
         pstat = pfields.equationP(StNo,pterm,stattype,"none",*ptermArglist)  
         pstat_test1 = pfields.equationP(StNo,pterm,stattype,"none",*ptermArglist_test1)  
@@ -122,9 +128,7 @@ for StNo in ptype:
 
 
 
-        def keys_no_yplus(arg):   #keys except "yplus"
-            return ifilterfalse(lambda x: x=="yplus", set(arg))
-
+        '''
         pstat_gradient = {}
         for component in ['Ux','Uy','Uz']:
             pstat_gradient[component] = pfields.equationP(StNo,lambda x : x,stattype,'none',*gradients[component])  
@@ -141,27 +145,32 @@ for StNo in ptype:
             print "plot created: " + plotFileNamePterm
             plt.close(gradfig.fig)
 
+        '''
+
         # velocity statistics
         iterable =  zip(range(3),keys_no_yplus(pstat.keys()),
-                keys_no_yplus(pstat_test1.keys()),keys_no_yplus(pstat_test2.keys()),
+                keys_no_yplus(pstat_test1.keys()),
+                keys_no_yplus(pstat_test2.keys()),
                 keys_no_yplus(pstat_test3.keys()),keys_no_yplus(pstat_test4.keys()))
 
+        print iterable
+
         for direction,pKey,pKey_test1,pKey_test2,pKey_test3,pKey_test4 in iterable:
-            ptermfig = hfig.Homfig(title="pterm ", ylabel="$(V-U)_j*du/dx_j$",xlim=[-1,1])
-            plotFileNamePterm = pict_path + "test_pterm_nosymm_"+stattype +coordinates[direction]+"_"+StNo+".eps"
+           # ptermfig = hfig.Homfig(title="pterm ", ylabel="$(V-U)_j*du/dx_j$",xlim=[-1,1])
+           # plotFileNamePterm = pict_path + "test_pterm_nosymm_"+stattype +coordinates[direction]+"_"+StNo+".eps"
 
-            ptermfig.add_plot(pstat["yplus"],pstat[pKey],linestyle='solid',label='excact term, $(V-U)_j*du/dx_j$')
-            ptermfig.add_plot(pstat_test1["yplus"],pstat_test1[pKey_test1],linestyle='dotted',label='$(V-Uf)_j*du/dx_j$')
-            ptermfig.add_plot(pstat_test2["yplus"],pstat_test2[pKey_test2],linestyle='dashed',label='$(V-Uf)_j*dUf/dx_j$')
+            #ptermfig.add_plot(pstat["yplus"],pstat[pKey],linestyle='solid',label='excact term, $(V-U)_j*du/dx_j$')
+            #ptermfig.add_plot(pstat_test1["yplus"],pstat_test1[pKey_test1],linestyle='dotted',label='$(V-Uf)_j*du/dx_j$')
+            #ptermfig.add_plot(pstat_test2["yplus"],pstat_test2[pKey_test2],linestyle='dashed',label='$(V-Uf)_j*dUf/dx_j$')
                 
-            ptermfig.hdraw()
-            ptermfig.save(plotFileNamePterm)
-            print "plot created: " + plotFileNamePterm
-            plt.close(ptermfig.fig)
+            #ptermfig.hdraw()
+            #ptermfig.save(plotFileNamePterm)
+            #print "plot created: " + plotFileNamePterm
+            #plt.close(ptermfig.fig)
 
 
-            ptermfullvel = hfig.Homfig(title="pterm ", ylabel="$(V-U)_j*dU/dx_j$")
-            plotFileNamePterm = pict_path + "test_VUdUdx_"+stattype +coordinates[direction]+"_"+StNo+".eps"
+            ptermfullvel = hfig.Homfig(title="pterm ", ylabel="$(V-U)_j*dU/dx_j$",xlim=[-1,1])
+            plotFileNamePterm = pict_path + "test_VUdUdx_nosymm"+stattype +coordinates[direction]+"_"+StNo+".eps"
 
             ptermfullvel.add_plot(pstat_test2["yplus"],pstat_test2[pKey_test2],linestyle='solid',label='$(V-Uf)_j*dUf/dx_j$')
             ptermfullvel.add_plot(pstat_test3["yplus"],pstat_test3[pKey_test3],linestyle='dotted',label='$(V-U)_j*dU/dx_j$')
@@ -171,4 +180,3 @@ for StNo in ptype:
             ptermfullvel.save(plotFileNamePterm)
             print "plot created: " + plotFileNamePterm
             plt.close(ptermfullvel.fig)
-            '''

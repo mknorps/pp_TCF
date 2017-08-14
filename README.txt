@@ -37,3 +37,25 @@ Examples of usage are:
 	apriori_SGS_particles.py
 
 
+###########################################################
+#
+#  General description
+#
+###########################################################
+
+
+#~~~~~~~~~~~~~~~~~  INPUT  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+The input may be:
+
+(1)	- a text file of fluid field (velocity or other)
+	  on a mesh. 
+	- mesh nodes number (N,M,O)  in 
+	  streamwise, wall-normal and spanwise directions
+	  respectively.
+	  The mesh of channel flow has uniform grid points 
+	  distribution in periodic directions and Chebyshev 
+	  polynomial zeros in wall-normal direction 
+	  y(j)=cos(j*pi/N)
+
+(2)     - a text file of particle related quantities
