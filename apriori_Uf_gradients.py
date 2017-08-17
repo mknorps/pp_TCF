@@ -3,7 +3,7 @@
 # File name: apriori_tests_timestat.py
 # Created by: gemusia
 # Creation date: 21-07-2017
-# Last modified: 16-08-2017 18:15:50
+# Last modified: 17-08-2017 15:01:35
 # Purpose:computation of apriori statistics of particles,
 #        statistic derived from scratch 
 #      - test of possible substitution of (V-U)du^*/dx term 
@@ -101,10 +101,21 @@ ptermArglist_test4 = [['Vx','Vy','Vz','Ux','Uy','Uz','dUfxdx','dUfxdy','dUfxdz']
     ['Vx','Vy','Vz','Ux','Uy','Uz','dUfzdx','dUfzdy','dUfzdz']]
 
 gradients = {}
-gradients['Ux'] = [['dUfxdx'],['dUfxdy'],['dUfxdz']]
-gradients['Uy'] = [['dUfydx'],['dUfydy'],['dUfydz']]
-gradients['Uz'] = [['dUfzdx'],['dUfzdy'],['dUfzdz']]
+gradients['dx'] = [['dUfxdx'],['dUfydx'],['dUfzdx']]
+gradients['dy'] = [['dUfxdy'],['dUfydy'],['dUfzdy']]
+gradients['dz'] = [['dUfxdz'],['dUfydz'],['dUfzdz']]
 
+stype={'pmean':'asymm','pstd':'symm'}
+labels = {'dUfxdx':'$d\overline{U}_x/dx$',
+          'dUfydx':'$d\overline{U}_y/dx$',
+          'dUfzdx':'$d\overline{U}_z/dx$',
+          'dUfxdy':'$d\overline{U}_x/dy$',
+          'dUfydy':'$d\overline{U}_y/dy$',
+          'dUfzdy':'$d\overline{U}_z/dy$',
+          'dUfxdz':'$d\overline{U}_x/dz$',
+          'dUfydz':'$d\overline{U}_y/dz$',
+          'dUfzdz':'$d\overline{U}_z/dz$'
+        }
 # separate plots for each stokes number
 for StNo in ptype:
 
@@ -117,11 +128,11 @@ for StNo in ptype:
         
 
         # STATISTICS
-        pstat = pfields.equationP(StNo,pterm,stattype,"none",*ptermArglist)  
-        pstat_test1 = pfields.equationP(StNo,pterm,stattype,"none",*ptermArglist_test1)  
-        pstat_test2 = pfields.equationP(StNo,pterm_test2,stattype,"none",*ptermArglist_test2)  
-        pstat_test3 = pfields.equationP(StNo,pterm_test2,stattype,"none",*ptermArglist_test3)  
-        pstat_test4 = pfields.equationP(StNo,pterm_test2,stattype,"none",*ptermArglist_test4)  
+#        pstat = pfields.equationP(StNo,pterm,stattype,"none",*ptermArglist)  
+#        pstat_test1 = pfields.equationP(StNo,pterm,stattype,"none",*ptermArglist_test1)  
+#        pstat_test2 = pfields.equationP(StNo,pterm_test2,stattype,"none",*ptermArglist_test2)  
+#        pstat_test3 = pfields.equationP(StNo,pterm_test2,stattype,"none",*ptermArglist_test3)  
+#        pstat_test4 = pfields.equationP(StNo,pterm_test2,stattype,"none",*ptermArglist_test4)  
 
         # FIGURES
 
@@ -129,22 +140,29 @@ for StNo in ptype:
 
 
         pstat_gradient = {}
-        for component in ['Ux','Uy','Uz']:
-            pstat_gradient[component] = pfields.equationP(StNo,lambda x : x,stattype,'none',*gradients[component])  
-        
-            gradfig = hfig.Homfig(title="gradients  of " + component, ylabel="$dUf/dx_j$", xlim=[-1,1])
-            plotFileNamePterm = pict_path + "gradients_"+stattype +'_'+ component+"_"+StNo+".eps"
+        gradfig = hfig.Homfig(title="gradients  of $\overline{U}$" , ylabel="$d\overline{U}/dx_j$", xscale='log',xlim=[1,160])
+        plotFileNamePterm = pict_path + "gradients_"+stattype +"_"+StNo+".eps"
 
+        for component in ['dx','dz']:
+            pstat_gradient[component] = pfields.equationP(StNo,lambda x : x,stattype,'symm',*gradients[component])  
+    
             iterable1 =  keys_no_yplus(pstat_gradient[component].keys())
             for pKey in iterable1:
-                gradfig.add_plot(pstat_gradient[component]["yplus"],pstat_gradient[component][pKey],label=pKey)
-                
-            gradfig.hdraw()
-            gradfig.save(plotFileNamePterm)
-            print "plot created: " + plotFileNamePterm
-            plt.close(gradfig.fig)
+                gradfig.add_plot(pstat_gradient[component]["yplus"],pstat_gradient[component][pKey],linetype='dotted',label=labels[pKey[1:]])
+        
+        pstat_gradient['dy'] = pfields.equationP(StNo,lambda x : x,stattype,stype[stattype],*gradients['dy'])  
+       
 
+        iterable1 =  keys_no_yplus(pstat_gradient['dy'].keys())
+        for pKey in iterable1:
+            gradfig.add_plot(pstat_gradient['dy']["yplus"],pstat_gradient['dy'][pKey],label=labels[pKey[1:]])
 
+        gradfig.hdraw()
+        gradfig.save(plotFileNamePterm)
+        print "plot created: " + plotFileNamePterm
+        plt.close(gradfig.fig)
+
+        '''
         # velocity statistics
         iterable =  zip(range(3),keys_no_yplus(pstat.keys()),
                 keys_no_yplus(pstat_test1.keys()),
@@ -178,3 +196,4 @@ for StNo in ptype:
             ptermfullvel.save(plotFileNamePterm)
             print "plot created: " + plotFileNamePterm
             plt.close(ptermfullvel.fig)
+        '''
