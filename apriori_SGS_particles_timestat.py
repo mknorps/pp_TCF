@@ -3,7 +3,7 @@
 # File name: apriori_SGS_particles.py
 # Created by: gemusia
 # Creation date: 08-07-2017
-# Last modified: 11-07-2017 15:00:45
+# Last modified: 18-08-2017 17:23:55
 # Purpose:computation of apriori statistics of particles,
 #         deterministic terms of equation are compared
 #
@@ -26,6 +26,13 @@ coordinates = {0:'x',1:'y',2:'z'}
 terms = {0:"termx",1:"termy",2:"termz"}
 ptype = {"St1","St5","St25","fluid"}
 
+labels = {'ftermx':'$u_{s,j}\\frac{\partial \overline{U}_{x}}{\partial x_{j}}$',
+          'ftermy':'$u_{s,j}\\frac{\partial \overline{U}_{y}}{\partial x_{j}}$',
+          'ftermz':'$u_{s,j}\\frac{\partial \overline{U}_{z}}{\partial x_{j}}$',
+          'ptermx':'$(V_{p,j}-U_{j})\\frac{\partial (U_{x}- \overline{U}_{x})}{\partial x_{j}}$',
+          'ptermy':'$(V_{p,j}-U_{j})\\frac{\partial (U_{y}- \overline{U}_{y})}{\partial x_{j}}$',
+          'ptermz':'$(V_{p,j}-U_{j})\\frac{\partial (U_{z}- \overline{U}_{z})}{\partial x_{j}}$'
+        }
 
 statistics = {0:("pmean",),1:("pstd",),
         2:("pcor","Ux","Uy"),
@@ -34,7 +41,12 @@ statistics = {0:("pmean",),1:("pstd",),
         5:("pek",)}
 
 
+# constants 
+utau = 0.0429
+Retau = 150
+termplus = utau**2 * Retau #parameter for non-dimensialisation
 
+print "normalisation factor = ", termplus
 #data loading and
 #initialising Particle class instance
 #the data is written to file in Fortran program with following code
@@ -61,6 +73,7 @@ file_path = expanduser("~") + "/wyniki/apriori/fede_terms_pDNS/"
 pict_path = file_path
 
 pfields=pf.ParticleFields(2501,2519,fCoreName=file_path+"fede_terms_",x=2,y=0,z=1,ftermx=5,ftermy=3,ftermz=4, ptermx=8,ptermy=6,ptermz=7)
+#pfields=pf.ParticleFields(2501,2501,fCoreName=file_path+"fede_terms_",x=2,y=0,z=1,ftermx=5,ftermy=3,ftermz=4, ptermx=8,ptermy=6,ptermz=7)
 
 
 for StNo in ptype:
@@ -80,11 +93,10 @@ for StNo in ptype:
             #figures
     for arg in ifilterfalse(lambda x: x=="plus", set(map(lambda y: y[1:],pstat.keys()))): #custom , for this case
 
-        statfig = hfig.Homfig(title=arg, ylabel=arg)
+        statfig = hfig.Homfig( ylabel='$u\\frac{\partial U}{\partial x}$')
 
-        #TODO
-        statfig.add_plot(pstat["yplus"],pstat["f"+arg],linestyle=LineStyle['fterm'],label='fterm')
-        statfig.add_plot(pstat["yplus"],pstat["p"+arg],linestyle=LineStyle['pterm'],label='pterm')
+        statfig.add_plot(pstat["yplus"],pstat["f"+arg]/termplus,linestyle=LineStyle['fterm'],label=labels['f'+arg[:5]])
+        statfig.add_plot(pstat["yplus"],pstat["p"+arg]/termplus,linestyle=LineStyle['pterm'],label=labels['p'+arg[:5]])
         
         statfig.hdraw()
         plotFileName = pict_path + arg +"_"+StNo+".eps"

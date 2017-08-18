@@ -3,7 +3,7 @@
 # File name: apriori_tests_timestat.py
 # Created by: gemusia
 # Creation date: 21-07-2017
-# Last modified: 17-08-2017 15:01:35
+# Last modified: 18-08-2017 12:37:26
 # Purpose:computation of apriori statistics of particles,
 #        statistic derived from scratch 
 #      - test of possible substitution of (V-U)du^*/dx term 
@@ -148,7 +148,7 @@ for StNo in ptype:
     
             iterable1 =  keys_no_yplus(pstat_gradient[component].keys())
             for pKey in iterable1:
-                gradfig.add_plot(pstat_gradient[component]["yplus"],pstat_gradient[component][pKey],linetype='dotted',label=labels[pKey[1:]])
+                gradfig.add_plot(pstat_gradient[component]["yplus"],pstat_gradient[component][pKey],linestyle='dotted',label=labels[pKey[1:]])
         
         pstat_gradient['dy'] = pfields.equationP(StNo,lambda x : x,stattype,stype[stattype],*gradients['dy'])  
        

@@ -3,7 +3,7 @@
 # File name: timescales.py
 # Created by: gemusia
 # Creation date: 26-07-2017
-# Last modified: 17-08-2017 15:32:58
+# Last modified: 17-08-2017 18:16:58
 # Purpose: draw plots of time scales of turbulent channel flow
 #          DNS, a priori LES, LES and SGS
 #
@@ -114,9 +114,9 @@ for simulation, St in product (ptype, Stlist):
 
 
     f_iter = [symm(np.transpose(np.loadtxt(file_path + "rho_" + St + "_"  + simulation + "_" 
-                                  +str(start_iteration[ptype][0]) +".dat",skiprows=1))[1:])]
+                                  +str(start_iteration[simulation][0]) +".dat",skiprows=1))[1:])]
 
-    for itno in start_iteration[ptype][1:]:
+    for itno in start_iteration[simulation][1:]:
        
         # first row of read data is iteration number, so it is ommited
         f_iter = np.append(f_iter,[symm(np.transpose(np.loadtxt(file_path + "rho_" + St + "_" 
@@ -127,7 +127,7 @@ for simulation, St in product (ptype, Stlist):
     #++++++++++++++++++++++++++++++++++++++++++++++
     # computing relaxation time tau = min {t; rho(t)<1\e}
 
-    print next(i for i,v in enumerate(rho[St + "_" + simulation][7]) if v<np.exp(-1))
+    print next(i for i,v in enumerate(rho[St + "_" + simulation][7]) if (v<np.exp(-1) or i==len(rho[St + "_" + simulation][7])-1))
 
     tau[St + "_" + simulation] = map(lambda x: ptype_dt[simulation]*
             next(i for i,v in enumerate(x) if (v<np.exp(-1) or i==len(x)-1)),rho[St + "_" + simulation]) 
