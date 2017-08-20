@@ -3,7 +3,7 @@
 # File name: apriori_SGS_particles.py
 # Created by: gemusia
 # Creation date: 08-07-2017
-# Last modified: 18-08-2017 17:23:55
+# Last modified: 19-08-2017 08:29:51
 # Purpose:computation of apriori statistics of particles,
 #         deterministic terms of equation are compared
 #
@@ -93,7 +93,7 @@ for StNo in ptype:
             #figures
     for arg in ifilterfalse(lambda x: x=="plus", set(map(lambda y: y[1:],pstat.keys()))): #custom , for this case
 
-        statfig = hfig.Homfig( ylabel='$u\\frac{\partial U}{\partial x}$')
+        statfig = hfig.Homfig( ylabel='$(u\\frac{\partial U}{\partial x})^{+}$')
 
         statfig.add_plot(pstat["yplus"],pstat["f"+arg]/termplus,linestyle=LineStyle['fterm'],label=labels['f'+arg[:5]])
         statfig.add_plot(pstat["yplus"],pstat["p"+arg]/termplus,linestyle=LineStyle['pterm'],label=labels['p'+arg[:5]])
