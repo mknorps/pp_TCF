@@ -3,7 +3,7 @@
 # File name: apriori_tests_timestat.py
 # Created by: gemusia
 # Creation date: 21-07-2017
-# Last modified: 19-08-2017 08:57:33
+# Last modified: 05-09-2017 12:48:09
 # Purpose:computation of apriori statistics of particles,
 #        statistic derived from scratch 
 #      - test of possible substitution of (V-U)du^*/dx term 
@@ -143,7 +143,7 @@ for StNo in ptype:
 
 
         pstat_gradient = {}
-        gradfig = hfig.Homfig(title="gradients  of $\overline{U}$" , ylabel="$d\overline{U}/dx_j$", xscale='log',xlim=[1,160])
+        gradfig = hfig.Homfig(title="gradients  of $\overline{U}$" , ylabel="$(d\overline{U}/dx_j)^{+}$", xscale='log',xlim=[1,160])
         plotFileNamePterm = pict_path + "gradients_"+stattype +"_"+StNo+".eps"
 
         for component in ['dx','dz']:

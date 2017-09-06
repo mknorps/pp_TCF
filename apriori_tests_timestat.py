@@ -3,7 +3,7 @@
 # File name: apriori_tests_timestat.py
 # Created by: gemusia
 # Creation date: 21-07-2017
-# Last modified: 16-08-2017 18:15:50
+# Last modified: 24-08-2017 12:08:16
 # Purpose:computation of apriori statistics of particles,
 #        statistic derived from scratch 
 #      - test of possible substitution of (V-U)du^*/dx term 
@@ -30,6 +30,11 @@ coordinates = {0:'x',1:'y',2:'z'}
 terms = {0:"termx",1:"termy",2:"termz"}
 ptype = {"St1","St5","St25","fluid"}
 
+
+# normalisation constants
+utau = 0.0429
+Retau = 150
+termplus = utau**2 * Retau #parameter for non-dimensialisation
 
 
 
@@ -100,10 +105,6 @@ ptermArglist_test4 = [['Vx','Vy','Vz','Ux','Uy','Uz','dUfxdx','dUfxdy','dUfxdz']
     ['Vx','Vy','Vz','Ux','Uy','Uz','dUfydx','dUfydy','dUfydz'],
     ['Vx','Vy','Vz','Ux','Uy','Uz','dUfzdx','dUfzdy','dUfzdz']]
 
-gradients = {}
-gradients['Ux'] = [['dUfxdx'],['dUfxdy'],['dUfxdz']]
-gradients['Uy'] = [['dUfydx'],['dUfydy'],['dUfydz']]
-gradients['Uz'] = [['dUfzdx'],['dUfzdy'],['dUfzdz']]
 
 # separate plots for each stokes number
 for StNo in ptype:
@@ -117,32 +118,15 @@ for StNo in ptype:
         
 
         # STATISTICS
-        pstat = pfields.equationP(StNo,pterm,stattype,"none",*ptermArglist)  
-        pstat_test1 = pfields.equationP(StNo,pterm,stattype,"none",*ptermArglist_test1)  
-        pstat_test2 = pfields.equationP(StNo,pterm_test2,stattype,"none",*ptermArglist_test2)  
-        pstat_test3 = pfields.equationP(StNo,pterm_test2,stattype,"none",*ptermArglist_test3)  
-        pstat_test4 = pfields.equationP(StNo,pterm_test2,stattype,"none",*ptermArglist_test4)  
+        pstat = pfields.equationP(StNo,pterm,stattype,"symm",*ptermArglist)  
+        pstat_test1 = pfields.equationP(StNo,pterm,stattype,"symm",*ptermArglist_test1)  
+        pstat_test2 = pfields.equationP(StNo,pterm_test2,stattype,"symm",*ptermArglist_test2)  
+        pstat_test3 = pfields.equationP(StNo,pterm_test2,stattype,"symm",*ptermArglist_test3)  
+        pstat_test4 = pfields.equationP(StNo,pterm_test2,stattype,"symm",*ptermArglist_test4)  
 
         # FIGURES
 
 
-
-
-        pstat_gradient = {}
-        for component in ['Ux','Uy','Uz']:
-            pstat_gradient[component] = pfields.equationP(StNo,lambda x : x,stattype,'none',*gradients[component])  
-        
-            gradfig = hfig.Homfig(title="gradients  of " + component, ylabel="$dUf/dx_j$", xlim=[-1,1])
-            plotFileNamePterm = pict_path + "gradients_"+stattype +'_'+ component+"_"+StNo+".eps"
-
-            iterable1 =  keys_no_yplus(pstat_gradient[component].keys())
-            for pKey in iterable1:
-                gradfig.add_plot(pstat_gradient[component]["yplus"],pstat_gradient[component][pKey],label=pKey)
-                
-            gradfig.hdraw()
-            gradfig.save(plotFileNamePterm)
-            print "plot created: " + plotFileNamePterm
-            plt.close(gradfig.fig)
 
 
         # velocity statistics
@@ -157,7 +141,6 @@ for StNo in ptype:
            # ptermfig = hfig.Homfig(title="pterm ", ylabel="$(V-U)_j*du/dx_j$",xlim=[-1,1])
            # plotFileNamePterm = pict_path + "test_pterm_nosymm_"+stattype +coordinates[direction]+"_"+StNo+".eps"
 
-            #ptermfig.add_plot(pstat["yplus"],pstat[pKey],linestyle='solid',label='excact term, $(V-U)_j*du/dx_j$')
             #ptermfig.add_plot(pstat_test1["yplus"],pstat_test1[pKey_test1],linestyle='dotted',label='$(V-Uf)_j*du/dx_j$')
             #ptermfig.add_plot(pstat_test2["yplus"],pstat_test2[pKey_test2],linestyle='dashed',label='$(V-Uf)_j*dUf/dx_j$')
                 
@@ -167,12 +150,14 @@ for StNo in ptype:
             #plt.close(ptermfig.fig)
 
 
-            ptermfullvel = hfig.Homfig(title="pterm ", ylabel="$(V-U)_j*dU/dx_j$",xlim=[-1,1])
-            plotFileNamePterm = pict_path + "test_VUdUdx_nosymm"+stattype +coordinates[direction]+"_"+StNo+".eps"
+            ptermfullvel = hfig.Homfig(title="pterm ", ylabel="$((V-U)_j*dU/dx_j)^{2}$")
+            plotFileNamePterm = pict_path + "VUdUdx_"+stattype +coordinates[direction]+"_"+StNo+".eps"
 
-            ptermfullvel.add_plot(pstat_test2["yplus"],pstat_test2[pKey_test2],linestyle='solid',label='$(V-Uf)_j*dUf/dx_j$')
-            ptermfullvel.add_plot(pstat_test3["yplus"],pstat_test3[pKey_test3],linestyle='dotted',label='$(V-U)_j*dU/dx_j$')
-            ptermfullvel.add_plot(pstat_test4["yplus"],pstat_test4[pKey_test4],linestyle='dashed',label='$(V-U)_j*dUf/dx_j$')
+            ptermfullvel.add_plot(pstat["yplus"],pstat[pKey]/termplus,linestyle='solid',label='excact term, $(V-U)_j*du/dx_j$')
+            ptermfullvel.add_plot(pstat_test1["yplus"],pstat_test1[pKey_test1]/termplus,linestyle='dashed',label='$(V-Uf)_j*du/dx_j$')
+            ptermfullvel.add_plot(pstat_test2["yplus"],pstat_test2[pKey_test2]/termplus,linestyle='dotted',label='$(V-Uf)_j*dUf/dx_j$')
+            #ptermfullvel.add_plot(pstat_test3["yplus"],pstat_test3[pKey_test3]/termplus,linestyle='dotted',label='$(V-U)_j*dU/dx_j$')
+            #ptermfullvel.add_plot(pstat_test4["yplus"],pstat_test4[pKey_test4]/termplus,linestyle='dashed',label='$(V-U)_j*dUf/dx_j$')
                 
             ptermfullvel.hdraw()
             ptermfullvel.save(plotFileNamePterm)
