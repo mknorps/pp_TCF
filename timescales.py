@@ -3,7 +3,7 @@
 # File name: timescales.py
 # Created by: gemusia
 # Creation date: 26-07-2017
-# Last modified: 05-09-2017 12:48:06
+# Last modified: 15-09-2017 20:23:41
 # Purpose: draw plots of time scales of turbulent channel flow
 #          DNS, a priori LES, LES and SGS
 #
@@ -39,8 +39,12 @@ def symm(lst):
     ll = len(lst)
     return 0.5*(lst[:(ll+1)/2] + np.flipud(lst)[:(ll+1)/2])
 
+def Chebyshev_zeroes(N):
+    return 0.5*(np.array(range(1,N+1))+np.array(range(N)))/float(N) * 150
 
 
+print "cheb zeroes: ",Chebyshev_zeroes(8)
+print Chebyshev_zeroes(16)
 #--------------------------------------------------------------------#
 # declaration of picture attributes
 #--------------------------------------------------------------------#
@@ -141,11 +145,24 @@ for simulation, St in product (ptype, Stlist):
     #++++++++++++++++++++++++++++++++++++++++++++++
     # computing relaxation time tau = min {t; rho(t)<1\e}
 
-    print next(i for i,v in enumerate(rho[St + "_" + simulation][7]) if (v<np.exp(-1) or i==len(rho[St + "_" + simulation][7])-1))
+    # print next(i for i,v in enumerate(rho[St + "_" + simulation][7]) if (v<np.exp(-1) or i==len(rho[St + "_" + simulation][7])-1))
 
-    tau[St + "_" + simulation] = map(lambda x: ptype_dt[simulation]*
-            next(i for i,v in enumerate(x) if (v<np.exp(-1) or i==len(x)-1)),rho[St + "_" + simulation])
+    tau[St + "_" + simulation] = np.array(map(lambda x: ptype_dt[simulation]*
+            next(i for i,v in enumerate(x) if (v<np.exp(-1) or i==len(x)-1)),rho[St + "_" + simulation]))/ttau
 
+    n_datapoints = len(tau[St + "_" + simulation])
+
+x_points = Chebyshev_zeroes(n_datapoints)
+
+# write tau to file     
+f_name_tau = file_path + "tau.csv"
+
+with open(f_name_tau,'wb') as f:
+    w = csv.writer(f)
+    w.writerow(tau.keys())
+    w.writerows(zip(*tau.values()))
+
+    print f_name_tau, " created"
 
 
 
@@ -177,33 +194,48 @@ for simulation, St in product (ptype, Stlist):
 for simulation in ptype:
     # correlation time plot
     taufig = hfig.Homfig(title= " Relaxation time for particles in " +simulation ,
-                               ylabel="$/tau$", xlabel="y", xlim=[0,8])
+                               ylabel="$\\tau^{+}$", xlabel="$y^{+}$") 
+    
+    taufig_related2fluid = hfig.Homfig(title= " Relaxation time for particles in " +simulation ,
+                               ylabel="$\\frac{\\tau}{\\tau_f}$", xlabel="$y^{+}$")
 
     plotFileName = pict_path + "tau_"+ simulation+".eps"
+    plotFileName_related2fluid = pict_path + "tau_"+ simulation+"_related2fluid.eps"
 
     for St in Stlist:
-        taufig.add_plot(tau[St + "_" + simulation],label=St)
+        taufig.add_plot(x_points,tau[St + "_" + simulation],label=St)
+        taufig_related2fluid.add_plot(x_points,np.divide(tau[St + "_" + simulation],tau["fluid_" + simulation]),label=St)
 
     taufig.hdraw()
+    taufig_related2fluid.hdraw()
     taufig.save(plotFileName)
-    print "plot created: " + plotFileName
+    taufig_related2fluid.save(plotFileName_related2fluid)
+    print "plots created: " + plotFileName + " and " + plotFileName_related2fluid
     plt.close(taufig.fig)
+    plt.close(taufig_related2fluid.fig)
 
 
 for St in Stlist:
     # correlation time plot
     taufig = hfig.Homfig(title= " Relaxation time for particles " + St ,
-                               ylabel="$/tau$", xlabel="y", xlim=[0,8])
+                               ylabel="$\\tau^{+}$", xlabel="$y^{+}$")
+    taufig_related2DNS = hfig.Homfig(title= " Relaxation time for particles " + St ,
+                               ylabel="$\\frac{\\tau}{\\tau_{DNS}}$", xlabel="$y^{+}$")
 
     plotFileName = pict_path + "tau_"+ St +".eps"
+    plotFileName_related2DNS = pict_path + "tau_"+ St +"_related2DNS.eps"
 
     for simulation in ptype:
-        taufig.add_plot(tau[St + "_" + simulation],label=simulation)
+        taufig.add_plot(x_points,tau[St + "_" + simulation],label=simulation)
+        taufig_related2DNS.add_plot(x_points,np.divide(tau[St + "_" + simulation],tau[St + "_DNS"]),label=simulation)
 
     taufig.hdraw()
+    taufig_related2DNS.hdraw()
     taufig.save(plotFileName)
-    print "plot created: " + plotFileName
+    taufig_related2DNS.save(plotFileName_related2DNS)
+    print "plot created: " + plotFileName + "  " + plotFileName_related2DNS
     plt.close(taufig.fig)
+    plt.close(taufig_related2DNS.fig)
 
 
 # plots of correlation coefficient DNS vs a priori LES
@@ -224,8 +256,31 @@ for St in Stlist:
     plt.close(corrfig.fig)
 # plots of relaxation time
 
-f_name_tau = file_path + "tau.csv"
-with open(f_name_tau,'wb') as f:
-    w = csv.DictWriter(f,tau.keys())
-    w.writeheader()
-    w.writerow(tau)
+
+#SGS contribution related to DNS relaxation time
+taufig = hfig.Homfig(title= " Relaxation time for particles in " +simulation ,
+                           ylabel="$\\frac{\\tau}{\\tau_DNS}$", xlabel="$y^{+}$")
+
+plotFileName = pict_path + "tau_SGS_normalised.eps"
+
+for St in Stlist:
+    taufig.add_plot(x_points,np.divide(tau[St + "_SGSles"],tau[St + "_DNS"]),label=St)
+
+taufig.hdraw()
+taufig.save(plotFileName)
+print "plots created: " + plotFileName 
+plt.close(taufig.fig)
+
+#LES contribution related to DNS relaxation time
+taufig = hfig.Homfig(title= " Relaxation time for particles in " +simulation ,
+                           ylabel="$\\frac{\\tau}{\\tau_DNS}$", xlabel="$y^{+}$")
+
+plotFileName = pict_path + "tau_LES_normalised.eps"
+
+for St in Stlist:
+    taufig.add_plot(x_points,np.divide(tau[St + "_LES"],tau[St + "_DNS"]),label=St)
+
+taufig.hdraw()
+taufig.save(plotFileName)
+print "plots created: " + plotFileName 
+plt.close(taufig.fig)
