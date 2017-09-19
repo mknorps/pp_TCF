@@ -3,7 +3,7 @@
 # File name: timescales.py
 # Created by: gemusia
 # Creation date: 26-07-2017
-# Last modified: 15-09-2017 20:23:41
+# Last modified: 18-09-2017 14:03:17
 # Purpose: draw plots of time scales of turbulent channel flow
 #          DNS, a priori LES, LES and SGS
 #
@@ -222,20 +222,30 @@ for St in Stlist:
     taufig_related2DNS = hfig.Homfig(title= " Relaxation time for particles " + St ,
                                ylabel="$\\frac{\\tau}{\\tau_{DNS}}$", xlabel="$y^{+}$")
 
+    taufig_DNS_LES = hfig.Homfig(title= " Relaxation time for particles " + St ,
+                               ylabel="$\\tau}$", xlabel="$y^{+}$")
+
     plotFileName = pict_path + "tau_"+ St +".eps"
     plotFileName_related2DNS = pict_path + "tau_"+ St +"_related2DNS.eps"
+    plotFileName_DNS_LES = pict_path + "tau_"+ St +"_DNS_LES.eps"
 
     for simulation in ptype:
         taufig.add_plot(x_points,tau[St + "_" + simulation],label=simulation)
         taufig_related2DNS.add_plot(x_points,np.divide(tau[St + "_" + simulation],tau[St + "_DNS"]),label=simulation)
 
+    taufig_DNS_LES.add_plot(x_points,tau[St + "_LES" ]-tau[St + "_DNS"],label='LES-DNS')
+    taufig_DNS_LES.add_plot(x_points,tau[St + "_SGSles" ],label='SGS')
+
     taufig.hdraw()
     taufig_related2DNS.hdraw()
+    taufig_DNS_LES.hdraw()
     taufig.save(plotFileName)
     taufig_related2DNS.save(plotFileName_related2DNS)
-    print "plot created: " + plotFileName + "  " + plotFileName_related2DNS
+    taufig_DNS_LES.save(plotFileName_DNS_LES)
+    print "plot created: " + plotFileName + "  " + plotFileName_related2DNS  + " " + plotFileName_DNS_LES
     plt.close(taufig.fig)
     plt.close(taufig_related2DNS.fig)
+    plt.close(taufig_DNS_LES.fig)
 
 
 # plots of correlation coefficient DNS vs a priori LES
@@ -258,7 +268,7 @@ for St in Stlist:
 
 
 #SGS contribution related to DNS relaxation time
-taufig = hfig.Homfig(title= " Relaxation time for particles in " +simulation ,
+taufig = hfig.Homfig(title= " SGS relaxation time for particles  "  ,
                            ylabel="$\\frac{\\tau}{\\tau_DNS}$", xlabel="$y^{+}$")
 
 plotFileName = pict_path + "tau_SGS_normalised.eps"
@@ -272,8 +282,8 @@ print "plots created: " + plotFileName
 plt.close(taufig.fig)
 
 #LES contribution related to DNS relaxation time
-taufig = hfig.Homfig(title= " Relaxation time for particles in " +simulation ,
-                           ylabel="$\\frac{\\tau}{\\tau_DNS}$", xlabel="$y^{+}$")
+taufig = hfig.Homfig(title= " Ratio of LES to DNS relaxation time for particles " ,
+                           ylabel="$\\frac{\\tau}{\\tau_{DNS}}$", xlabel="$y^{+}$")
 
 plotFileName = pict_path + "tau_LES_normalised.eps"
 
