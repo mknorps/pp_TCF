@@ -3,7 +3,7 @@
 # File name: time.py
 # Created by: gemusia
 # Creation date: 19-09-2017
-# Last modified: 19-09-2017 15:02:04
+# Last modified: 20-09-2017 12:49:21
 # Purpose: module containing costants, helper functions
 #          and declaration of atributes
 #          used in all types of time scales plots
@@ -39,6 +39,9 @@ m = 64
 o = 32
 length = 2.0*np.pi
 width =4.0*np.pi 
+
+#constants for models
+C_epsilon = 0.7
 
 #--------------------------------------------------------------------#
 # helper functions
