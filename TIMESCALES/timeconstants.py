@@ -3,7 +3,7 @@
 # File name: time.py
 # Created by: gemusia
 # Creation date: 19-09-2017
-# Last modified: 20-09-2017 12:49:21
+# Last modified: 20-09-2017 15:03:34
 # Purpose: module containing costants, helper functions
 #          and declaration of atributes
 #          used in all types of time scales plots

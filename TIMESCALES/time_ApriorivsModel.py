@@ -3,7 +3,7 @@
 # File name: timescales.py
 # Created by: gemusia
 # Creation date: 26-07-2017
-# Last modified: 20-09-2017 12:59:26
+# Last modified: 20-09-2017 16:16:51
 # Purpose: draw plots of time scales of turbulent channel flow
 #          DNS, a priori LES, LES and SGS
 #
@@ -44,6 +44,7 @@ with open(f_ksgs,'r') as f:
     ksgsYoshizawa = pd.DataFrame(ksgsYoshizawa)
     ksgsYoshizawa.columns = ['y','u2sgsy','u2sgsz','u2sgsx','usgsyz','usgsxy','usgsxz']
 
+
 #--------------------------------------------------------------------#
 # Data manipulation 
 #--------------------------------------------------------------------#
@@ -51,11 +52,11 @@ with open(f_ksgs,'r') as f:
 dissipation['tau_modell1'] = -1.0 * np.divide(dissipation['e1'],dissipation['ksgs'])/tc.ttau
 dissipation['tau_modell3'] = np.divide(dissipation['e3'],dissipation['ksgs'])/tc.ttau
 dissipation['tau_modell2'] = np.divide(np.array(map(tc.filter_width,range(len(dissipation)))),
-                                      map(lambda x: x**(0.5), dissipation['ksgs']))/(tc.ttau*tc.C_epsilon)
+                                      map(lambda x: (2.0/3.0)*x**(0.5), dissipation['ksgs']))/(tc.ttau*tc.C_epsilon)
 
 ksgsYoshizawa['ksgs'] = 0.5* (ksgsYoshizawa['u2sgsx'] + ksgsYoshizawa['u2sgsy'] + ksgsYoshizawa['u2sgsz'])
 ksgsYoshizawa['tau_Yoshizawa'] = np.divide(np.array(map(tc.filter_width,range(len(ksgsYoshizawa)))),
-                                      map(lambda x: x**(0.5),ksgsYoshizawa['ksgs']))/tc.ttau
+                                      map(lambda x: (2.0/3.0)*x**(0.5),ksgsYoshizawa['ksgs']))/tc.ttau
 ksgsYoshizawa['ksgs'] = ksgsYoshizawa['ksgs']/(tc.utau**2)
 
 # change: NaN to None
@@ -82,6 +83,9 @@ ksgsYoshizawa_symm = ksgsYoshizawa_symm.where(ksgsYoshizawa_symm.notnull(),None)
 relaxation_time['y'] = tc.Chebyshev_zeroes(len(relaxation_time))
 
 
+print(relaxation_time.describe())
+print(dissipation_symm.describe())
+print(ksgsYoshizawa_symm.describe())
 
 #--------------------------------------------------------------------#
 # PLOT DRAW
