@@ -3,7 +3,7 @@
 # File name: apriori_SGS_fluid.py
 # Created by: mknorps 
 # Creation date: 21-06-2017
-# Last modified: 24-09-2017 19:56:16
+# Last modified: 29-09-2017 12:35:17
 # Purpose: take filtered and unfiltered fluid field 
 #          in Fourier space from spectral code 
 #          compute statistics of SGS fluid velocity
@@ -18,8 +18,8 @@ import homfigs as hfig
 import itertools as it
 from scipy.interpolate import griddata
 from os.path import expanduser
-
-
+import sys
+import datetime
 
 # declaration of picture attributes
 
@@ -90,37 +90,86 @@ SGS_LES = hs.Channel(Ux_SGS,Uy_SGS,Uz_SGS,LES_data.K,LES_data.N, LES_data.M )
 #.....................................................
 #  VERSION 2: we take the difference in DNS nodes
 #             and interpolate LES to DNS position
-#
+#             
+#             For this we need to write the data to file
+#             since interpolation takes a lot of time (~ 3h for each velocity = ~9h)
+#             is run only if option 'INTERPOLATE' is activated
+#             in the command line run
+#             e.g.  python SGS_fluid_stats.py --interpolate
+
+INTERPOLATE = False
+
+if '--interpolate' in sys.argv:
+    INTERPOLATE = True
+    print ( 'Interpolation run... it may take a while ')
+    print ( 'Argument list: ',str(sys.argv))
 
 
-Ux_SGS_dense_grid = np.empty([128,129,128])
-Uy_SGS_dense_grid = np.empty([128,129,128])
-Uz_SGS_dense_grid = np.empty([128,129,128])
+if INTERPOLATE:
+    print("interpolating!!!!")
+    Ux_SGS_dense_grid = np.empty([128,129,128])
+    Uy_SGS_dense_grid = np.empty([128,129,128])
+    Uz_SGS_dense_grid = np.empty([128,129,128])
 
-#DNS grid - we will interpolate LES velocity on it
-x = np.linspace(0,4*np.pi,128)
-y = DNS_data.ynodes() 
-z = np.linspace(0,2*np.pi,128)
+    #DNS grid - we will interpolate LES velocity on it
+    x = np.linspace(0,4*np.pi,128)
+    y = DNS_data.ynodes() 
+    z = np.linspace(0,2*np.pi,128)
 
-grid_x,grid_y,grid_z = np.meshgrid(x,y,z)
+    grid_x,grid_y,grid_z = np.meshgrid(x,y,z)
 
-#LES grid
-x_LES = np.linspace(0,4*np.pi,32)
-y_LES = LES_data.ynodes() 
-z_LES = np.linspace(0,2*np.pi,64)
+    #LES grid
+    x_LES = np.linspace(0,4*np.pi,32)
+    y_LES = LES_data.ynodes() 
+    z_LES = np.linspace(0,2*np.pi,64)
 
-print(   len(x_LES),len(y_LES),len(z_LES))
+    print(   len(x_LES),len(y_LES),len(z_LES))
 
-LES_grid_x,LES_grid_y,LES_grid_z = np.meshgrid(x_LES,y_LES,z_LES)
- 
-points    = zip(LES_grid_x.flatten(), LES_grid_y.flatten(),LES_grid_z.flatten())
-value_Ux  = LES_data.Ux.flatten()  
-value_Uy  = LES_data.Uy.flatten()  
-value_Uz  = LES_data.Uz.flatten()  
+    LES_grid_x,LES_grid_y,LES_grid_z = np.meshgrid(x_LES,y_LES,z_LES)
+     
+    points    = zip(LES_grid_x.flatten(), LES_grid_y.flatten(),LES_grid_z.flatten())
+    value_Ux  = LES_data.Ux.flatten()  
+    value_Uy  = LES_data.Uy.flatten()  
+    value_Uz  = LES_data.Uz.flatten()  
 
-print("points: ", len(points), "  \t value_Ux : ",len(value_Ux))
+    print("points: ", len(points), "  \t value_Ux : ",len(value_Ux))
 
-LES_interpolated_Ux = griddata(points,value_Ux,(grid_x,grid_y,grid_z),method ='linear' )
+    #Ux
+    LES_interpolated_Ux = griddata(points,value_Ux,(grid_x,grid_y,grid_z),method ='linear' )
 
-print(LES_interpolated_Ux)
-SGS_DNS = hs.Channel(Ux_SGS_dense_grid,Uy_SGS_dense_grid,Uz_SGS_dense_grid,DNS_data.K,DNS_data.N, DNS_data.M )
+    with open('LES_interpolated_Ux.txt','w') as f:
+        f.write('# Array shape: {0}\n'.format(LES_interpolated_Ux.shape))
+        for LES_slice in LES_interpolated_Ux:
+            np.savetxt(f,LES_slice)
+    print ('Ux interpolated to DNS grid', datetime.datetime.strftime(datetime.datetime.now(),"%Y-%m-%d %H:%M:%S"))
+
+    #Uy
+    LES_interpolated_Uy = griddata(points,value_Uy,(grid_x,grid_y,grid_z),method ='linear' )
+    with open('LES_interpolated_Uy.txt','w') as f:
+        f.write('# Array shape: {0}\n'.format(LES_interpolated_Uy.shape))
+        for LES_slice in LES_interpolated_Uy:
+            np.savetxt(f,LES_slice)
+    print ('Uy interpolated to DNS grid', datetime.datetime.strftime(datetime.datetime.now(),"%Y-%m-%d %H:%M:%S"))
+
+    #Uz
+    LES_interpolated_Uz = griddata(points,value_Uz,(grid_x,grid_y,grid_z),method ='linear' )
+    with open('LES_interpolated_Uz.txt','w') as f:
+        f.write('# Array shape: {0}\n'.format(LES_interpolated_Uz.shape))
+        for LES_slice in LES_interpolated_Uz:
+            np.savetxt(f,LES_slice)
+    print ('Uz interpolated to DNS grid', datetime.datetime.strftime(datetime.datetime.now(),"%Y-%m-%d %H:%M:%S"))
+
+
+
+Ux_data = np.loadtxt('LES_interpolated_Ux.txt').reshape(128,129,128)
+Uy_data = np.loadtxt('LES_interpolated_Uy.txt').reshape(128,129,128)
+Uz_data = np.loadtxt('LES_interpolated_Uz.txt').reshape(128,129,128)
+
+Ux_SGS_dense = DNS_data.Ux - Ux_data
+Uy_SGS_dense = DNS_data.Uy - Uy_data
+Uz_SGS_dense = DNS_data.Uz - Uz_data
+
+SGS_DNS = hs.Channel(Ux_SGS_dense,Uy_SGS_dense,Uz_SGS_dense,DNS_data.K,DNS_data.N, DNS_data.M )
+
+
+
